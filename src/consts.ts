@@ -38,13 +38,19 @@ export const NAV_LINKS: Link[] = [
 ]
 
 export const FOOTER_LINKS: Link[] = [
-  { href: 'https://github.com/rcwowo/vod-archive', label: 'GitHub' },
-  { href: 'mailto:riley@rcw.lol', label: 'Email' },
+  { href: 'https://gitlab.com/rcw.lol/vods', label: 'GitLab' },
+  { href: 'riley@rcw.lol', label: 'Email' },
   { href: '/rss.xml', label: 'RSS' },
 ]
 
 
 export const BADGES: Record<string, Badge> = {
+  broadcaster: {
+    id: 'broadcaster',
+    version: '1',
+    imageUrl: 'https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1',
+    title: 'Broadcaster',
+  },
   moderator: {
     id: 'moderator',
     version: '1',
