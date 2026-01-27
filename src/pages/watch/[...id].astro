@@ -17,6 +17,16 @@ export async function getStaticPaths() {
 
 const { vod } = Astro.props
 const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
+
+const { GITLAB_REPO_USERNAME, GITLAB_REPO_NAME } = import.meta.env
+const chatLogPath = vod.data['Chat Replay Path']
+let chatReplayUrl: string | undefined
+
+if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
+  const projectId = encodeURIComponent(`${GITLAB_REPO_USERNAME}/${GITLAB_REPO_NAME}`)
+  const filePath = encodeURIComponent(chatLogPath)
+  chatReplayUrl = `https://gitlab.com/api/v4/projects/${projectId}/repository/files/${filePath}/raw?ref=master`
+}
 ---
 
 <MinimalLayout
@@ -63,7 +73,7 @@ const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
       <div class="relative flex-1">
         <div class="relative h-full w-full">
           {
-            vod.data['Chat Replay URL'] ? (
+            chatReplayUrl ? (
               <div
                 id={`youtube-player-${youtubeId}`}
                 class="absolute left-0 top-0 h-full w-full"
@@ -82,11 +92,11 @@ const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
 
       <!-- Chat Replay -->
       {
-        vod.data['Chat Replay URL'] && (
+        chatReplayUrl && (
           <div class="h-[60vh] overflow-hidden border-t bg-muted/30 md:h-auto md:w-80 md:border-l md:border-t-0">
             <ChatReplay
               client:load
-              chatReplayURL={vod.data['Chat Replay URL']}
+              chatReplayURL={chatReplayUrl}
               youtubeId={youtubeId}
             />
           </div>
