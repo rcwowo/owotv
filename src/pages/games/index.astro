@@ -2,7 +2,7 @@
 import Layout from '@/layouts/Layout.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import { getCollection } from 'astro:content'
-import GameCard from '@/components/vod-vault/GameCard.astro'
+import GameCard from '@/components/vods/GameCard.astro'
 
 const vods = await getCollection('vods')
 const sortedVods = vods.sort(

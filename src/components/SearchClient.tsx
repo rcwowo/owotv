@@ -1,7 +1,7 @@
-import { Calendar, Clock, FileQuestion, Gamepad } from 'lucide-react'
+import { Calendar, Clock, FileQuestion, Gamepad, Tv } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type VodIndexItem = {
   id: string
@@ -15,10 +15,31 @@ type VodIndexItem = {
   _w: { title: string[]; game: string[] }
 }
 
-type IndexResponse = {
+type EpisodeIndexItem = {
+  id: string
+  title: string
+  showId: string
+  showTitle: string
+  seasonId: string
+  seasonTitle: string
+  date: string
+  dateDisplay: string
+  duration: string
+  thumbnail: string
+  tokens: string[]
+  _w: { title: string[]; show: string[]; season: string[] }
+}
+
+type VodIndexResponse = {
   generatedAt: string
   count: number
   vods: VodIndexItem[]
+}
+
+type EpisodeIndexResponse = {
+  generatedAt: string
+  count: number
+  episodes: EpisodeIndexItem[]
 }
 
 interface Props {
@@ -27,11 +48,25 @@ interface Props {
 
 interface ScoredVod extends VodIndexItem {
   score: number
+  type: 'vod'
 }
 
-const fetchIndex = async (): Promise<IndexResponse> => {
+interface ScoredEpisode extends EpisodeIndexItem {
+  score: number
+  type: 'episode'
+}
+
+type ScoredResult = ScoredVod | ScoredEpisode
+
+const fetchVodIndex = async (): Promise<VodIndexResponse> => {
   const res = await fetch('/vods-search-index.json')
-  if (!res.ok) throw new Error('Failed to load search index')
+  if (!res.ok) throw new Error('Failed to load VOD search index')
+  return res.json()
+}
+
+const fetchEpisodeIndex = async (): Promise<EpisodeIndexResponse> => {
+  const res = await fetch('/episodes-search-index.json')
+  if (!res.ok) throw new Error('Failed to load episode search index')
   return res.json()
 }
 
@@ -53,15 +88,19 @@ export default function SearchClient({ initialQuery = '' }: Props) {
     return initialQuery
   }
   const [query, setQuery] = useState(getInitialQuery)
-  const [index, setIndex] = useState<IndexResponse | null>(null)
+  const [vodIndex, setVodIndex] = useState<VodIndexResponse | null>(null)
+  const [episodeIndex, setEpisodeIndex] = useState<EpisodeIndexResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Load index once
+  // Load both indexes once
   useEffect(() => {
     setIsLoading(true)
-    fetchIndex()
-      .then((idx) => setIndex(idx))
+    Promise.all([fetchVodIndex(), fetchEpisodeIndex()])
+      .then(([vodIdx, episodeIdx]) => {
+        setVodIndex(vodIdx)
+        setEpisodeIndex(episodeIdx)
+      })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false))
   }, [])
@@ -95,7 +134,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
 
   // VOD results with scoring
   const vodResults: ScoredVod[] = useMemo(() => {
-    if (!index) return []
+    if (!vodIndex) return []
     const q = normalize(query)
     if (!q) {
       // No query: show nothing, handled by instruction card
@@ -103,7 +142,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
     }
     const parts = q.split(' ').filter(Boolean)
     const matches: ScoredVod[] = []
-    outer: for (const vod of index.vods) {
+    outer: for (const vod of vodIndex.vods) {
       let score = 0
       for (const token of parts) {
         // Direct token membership OR substring match inside title/game token
@@ -123,7 +162,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
         1 /
         (1 + (Date.now() - Date.parse(vod.date)) / (1000 * 60 * 60 * 24 * 30))
       score += ageBoost
-      matches.push({ ...vod, score })
+      matches.push({ ...vod, score, type: 'vod' })
     }
     return matches
       .sort((a, b) => {
@@ -131,13 +170,58 @@ export default function SearchClient({ initialQuery = '' }: Props) {
         return b.date.localeCompare(a.date)
       })
       .slice(0, 100)
-  }, [index, query])
+  }, [vodIndex, query])
 
-  // Only VOD results
-  const combinedResults = useMemo(() => {
+  // Episode results with scoring
+  const episodeResults: ScoredEpisode[] = useMemo(() => {
+    if (!episodeIndex) return []
+    const q = normalize(query)
+    if (!q) {
+      return []
+    }
+    const parts = q.split(' ').filter(Boolean)
+    const matches: ScoredEpisode[] = []
+    outer: for (const episode of episodeIndex.episodes) {
+      let score = 0
+      for (const token of parts) {
+        const inTokens = episode.tokens.some((t) => t === token)
+        const partial = !inTokens && episode.tokens.some((t) => t.startsWith(token))
+        if (!inTokens && !partial) continue outer // AND semantics
+
+        // Scoring weights - prioritize show name and episode title
+        if (episode._w.show.some((t) => t === token)) score += 6
+        else if (episode._w.show.some((t) => t.startsWith(token))) score += 4
+        else if (episode._w.title.some((t) => t === token)) score += 5
+        else if (episode._w.title.some((t) => t.startsWith(token))) score += 3
+        else if (episode._w.season.some((t) => t === token)) score += 2
+        else if (episode._w.season.some((t) => t.startsWith(token))) score += 1
+        else score += 1 // date or generic token
+      }
+      // Boost newer content lightly
+      const ageBoost =
+        1 /
+        (1 + (Date.now() - Date.parse(episode.date)) / (1000 * 60 * 60 * 24 * 30))
+      score += ageBoost
+      matches.push({ ...episode, score, type: 'episode' })
+    }
+    return matches
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return b.date.localeCompare(a.date)
+      })
+      .slice(0, 100)
+  }, [episodeIndex, query])
+
+  // Combined results - merge and sort by score
+  const combinedResults: ScoredResult[] = useMemo(() => {
     if (!query) return []
-    return vodResults
-  }, [vodResults, query])
+    return [...vodResults, ...episodeResults]
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return b.date.localeCompare(a.date)
+      })
+      .slice(0, 100)
+  }, [vodResults, episodeResults, query])
 
   // UI
   return (
@@ -147,7 +231,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
           id="vod-search"
           autoFocus
           className="w-full border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Start searching for a VOD..."
+          placeholder="Search VODs and shows..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -162,7 +246,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
           Failed to load search index: {error}
         </div>
       )}
-      {isLoading && !index && (
+      {isLoading && !vodIndex && !episodeIndex && (
         <div className="text-sm text-muted-foreground">Loading index…</div>
       )}
 
@@ -173,8 +257,8 @@ export default function SearchClient({ initialQuery = '' }: Props) {
             <h2 className="text-xl font-semibold">Introducing search!</h2>
             <span className="text-left text-sm text-muted-foreground">
               <p>
-                You can now find a VOD by simply using keywords like the game,
-                date or title to find a stream.
+                You can now find VODs and show episodes by using keywords like the game,
+                date, title, or show name.
               </p>
               <p>See the examples below:</p>
             </span>
@@ -182,6 +266,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
               <li>exit 8</li>
               <li>minecraft january 2024</li>
               <li>morning show</li>
+              <li>commonwealth reconstructed</li>
             </ul>
           </div>
           <div className="flex flex-col items-end gap-2 text-right">
@@ -222,10 +307,14 @@ export default function SearchClient({ initialQuery = '' }: Props) {
       {/* VOD results only */}
       {query && combinedResults.length > 0 && (
         <ul className="space-y-4">
-          {combinedResults.map((vod, idx) => (
-            <li key={vod.id} className="group relative">
+          {combinedResults.map((result) => (
+            <li key={`${result.type}-${result.id}`} className="group relative">
               <a
-                href={`/watch/${vod.id}`}
+                href={
+                  result.type === 'vod'
+                    ? `/watch/${result.id}`
+                    : `/shows/${result.showId}/${result.seasonId}/${result.id}`
+                }
                 className="relative bg-card flex flex-col items-stretch overflow-hidden border transition-shadow hover:shadow-md sm:flex-row"
               >
                 {/* Hover overlay */}
@@ -235,29 +324,44 @@ export default function SearchClient({ initialQuery = '' }: Props) {
                 {/* The actual stuff */}
                 <div className="w-full aspect-video overflow-hidden sm:flex-none sm:h-24 sm:w-44">
                   <img
-                    src={vod.thumbnail}
-                    alt={vod.title}
+                    src={result.thumbnail}
+                    alt={result.title}
                     loading="lazy"
                     decoding="async"
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="flex min-w-0 justify-center flex-1 flex-col p-3">
-                  <h3 className="line-clamp-2 text-base font-semibold sm:text-lg">
-                    {vod.title}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    {result.type === 'episode' && (
+                      <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+                        <Tv size="10" className="mr-1" />
+                        Show
+                      </span>
+                    )}
+                    <h3 className="line-clamp-2 text-base font-semibold sm:text-lg">
+                      {result.title}
+                    </h3>
+                  </div>
                   <div className="mt-1 sm:mt-0 flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-                    <span className="flex items-center">
-                      <Gamepad size="12" className="mr-1" />
-                      {vod.game}
-                    </span>
+                    {result.type === 'vod' ? (
+                      <span className="flex items-center">
+                        <Gamepad size="12" className="mr-1" />
+                        {result.game}
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <Tv size="12" className="mr-1" />
+                        {result.showTitle} • {result.seasonTitle}
+                      </span>
+                    )}
                     <span className="flex items-center">
                       <Calendar size="12" className="mr-1" />
-                      {vod.dateDisplay}
+                      {result.dateDisplay}
                     </span>
                     <span className="flex items-center">
                       <Clock size="12" className="mr-1" />
-                      {vod.duration}
+                      {result.duration}
                     </span>
                   </div>
                 </div>
@@ -268,7 +372,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
       )}
 
       {/* No results found */}
-      {index && query && combinedResults.length === 0 && (
+      {vodIndex && episodeIndex && query && combinedResults.length === 0 && (
         <div className="bg-card flex flex-col items-center justify-center gap-2 border p-6 text-sm text-muted-foreground shadow-sm">
           <FileQuestion size={32} />
           <p>We couldn't find anything. Try different keywords.</p>

@@ -1,0 +1,22 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import ShowCard from '@/components/shows/ShowCard.astro'
+import Layout from '@/layouts/Layout.astro'
+import { SITE } from '@/consts'
+import { getShows } from '@/lib/shows'
+
+const shows = await getShows()
+---
+
+<Layout title="Shows" description={`Curated shows created and produced by ${SITE.TITLE}`}>
+  <main class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <div class="py-4 space-y-4">
+      <Breadcrumbs items={[{ label: 'Shows' }]} />
+      <h1 class="text-4xl font-bold tracking-tight">Shows</h1>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {shows.map((show) => <ShowCard show={show} />)}
+    </div>
+  </main>
+</Layout>
