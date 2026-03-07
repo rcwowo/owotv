@@ -1,5 +1,5 @@
 ---
-import ChatReplay from '@/components/chat-replay/ChatReplay.tsx'
+import ChatReplay from '@/components/vods/chat-replay/ChatReplay'
 import { buttonVariants } from '@/components/ui/button'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubeVideoID } from '@/lib/utils'
@@ -34,20 +34,20 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
   description={`Stream VOD: ${vod.data['Title']}`}
   image={vod.data['Thumbnail URL']}
 >
-  <main class="flex h-screen flex-col">
+  <main class="flex h-screen flex-col bg-background">
     <!-- Top Navigation Bar -->
     <div class="flex items-center justify-between border-b p-4">
       <button
-        class={buttonVariants({ variant: 'outline' })}
+        class={buttonVariants({ variant: 'outline', size: 'sm' })}
         onclick="(function(){try{if(window.history.length>1){window.history.back()}else{window.location.href='/'}}catch(e){window.location.href='/'}})()"
       >
-        <Icon name="lucide:chevron-left" class="md:mr-2" />
+        <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
         <span class="hidden md:inline">Go Back</span>
       </button>
       <div class="flex items-center gap-4 text-right">
         <div class="max-w-[70vw]">
-          <h1 class="truncate text-lg font-semibold">{vod.data['Title']}</h1>
-          <p class="truncate text-sm text-muted-foreground">
+          <h1 class="truncate text-sm font-semibold">{vod.data['Title']}</h1>
+          <p class="truncate text-xs text-muted-foreground">
             {vod.data['Game']} • {
               vod.data['Stream Date'].toLocaleString('en-US', {
                 month: 'long',
@@ -62,15 +62,14 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
           alt={`Game cover for ${vod.data['Game']}`}
           width={32}
           height={32}
-          class="hidden h-12 w-9 md:block"
         />
       </div>
     </div>
 
     <!-- Content Area -->
-    <div class="relative flex flex-1 flex-col overflow-hidden md:flex-row">
+    <div class="flex flex-1 overflow-hidden">
       <!-- Video Player -->
-      <div class="relative flex-1">
+      <div class="relative flex flex-1 flex-col bg-black">
         <div class="relative h-full w-full">
           {
             chatReplayUrl ? (
@@ -93,13 +92,11 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
       <!-- Chat Replay -->
       {
         chatReplayUrl && (
-          <div class="h-[60vh] overflow-hidden border-t bg-muted/30 md:h-auto md:w-80 md:border-l md:border-t-0">
-            <ChatReplay
-              client:load
-              chatReplayURL={chatReplayUrl}
-              youtubeId={youtubeId}
-            />
-          </div>
+          <ChatReplay
+            client:load
+            chatReplayURL={chatReplayUrl}
+            youtubeId={youtubeId}
+          />
         )
       }
     </div>

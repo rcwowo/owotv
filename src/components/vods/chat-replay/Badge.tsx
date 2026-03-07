@@ -8,7 +8,7 @@ import {
 import type { BadgeId } from '@/consts'
 import type { BadgeProps } from './types'
 
-export function Badge({ badgeId, version }: BadgeProps) {
+export function Badge({ badgeId }: BadgeProps) {
   const badge = BADGES[badgeId as BadgeId]
 
   if (!badge) return null

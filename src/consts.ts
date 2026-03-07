@@ -20,21 +20,18 @@ export type Link = {
 }
 
 export const SITE: Site = {
-  TITLE: 'vods.rcw.lol',
+  TITLE: 'owoTV',
   DESCRIPTION:
-    'A fully featured archive of my past livestreams, including chat replay, search, date sorting and game sorting.',
+    'A fully featured archive of my past livestreams. Complete with chat replay and other features.',
   EMAIL: 'riley@rcw.lol',
   VODS_PER_PAGE: 21,
-  SITEURL: 'https://vods.rcw.lol',
+  SITEURL: 'https://owo.rcw.lol',
   TWITCH_USER_ID: 194814599
 }
 
 export const NAV_LINKS: Link[] = [
-  /*
-  { href: 'https://ltwilson.tv', label: 'Blog' },
-  { href: 'https://twitch.tv/theltwilson', label: 'Twitch' },
-  { href: 'https://github.com/theltwilson', label: 'GitHub' }
-   */
+  { href: '/vods', label: 'VODs' },
+  { href: '/shows', label: 'Shows' },
 ]
 
 export const FOOTER_LINKS: Link[] = [
