@@ -1,18 +1,43 @@
 import { defineCollection, z } from 'astro:content'
 
+type BaserowListResponse<T> = {
+  next: string | null
+  results: T[]
+}
+
+async function fetchAllBaserowRows<T>(path: string): Promise<T[]> {
+  const results: T[] = []
+  let nextUrl: string | null = new URL(path, 'https://db.lab.rcw.lol').toString()
+
+  while (nextUrl) {
+    console.log(`Fetching Baserow rows from: ${nextUrl}`)
+
+    const response = await fetch(nextUrl, {
+      headers: {
+        Authorization: `Token ${import.meta.env.BASEROW_DB_TOKEN}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Baserow rows: ${response.status}`)
+    }
+
+    const data: BaserowListResponse<T> = await response.json()
+    results.push(...data.results)
+    // baserow might return http URLs but they no work
+    nextUrl = data.next ? data.next.replace(/^http:/, 'https:') : null
+  }
+
+  return results
+}
+
 const vods = defineCollection({
   loader: async () => {
-    const response = await fetch(
-      'https://db.lab.rcw.lol/api/database/rows/table/773/?user_field_names=true&view_id=3413',
-      {
-        headers: {
-          Authorization: `Token ${import.meta.env.BASEROW_DB_TOKEN}`,
-        },
-      },
+    const data = await fetchAllBaserowRows<any>(
+      '/api/database/rows/table/773/?user_field_names=true&view_id=3413',
     )
-    const data = await response.json()
 
-    return data.results.map((item: any) => ({
+    return data.map((item: any) => ({
       ...item,
       'id': item['UUID'],
     }))
@@ -34,17 +59,11 @@ const vods = defineCollection({
 
 const shows = defineCollection({
   loader: async () => {
-    const response = await fetch(
-      'https://db.lab.rcw.lol/api/database/rows/table/774/?user_field_names=true',
-      {
-        headers: {
-          Authorization: `Token ${import.meta.env.BASEROW_DB_TOKEN}`,
-        },
-      },
+    const data = await fetchAllBaserowRows<any>(
+      '/api/database/rows/table/774/?user_field_names=true',
     )
-    const data = await response.json()
 
-    return data.results.map((item: any) => ({
+    return data.map((item: any) => ({
       ...item,
       'id': String(item.id),
     }))
@@ -67,17 +86,11 @@ const shows = defineCollection({
 
 const episodes = defineCollection({
   loader: async () => {
-    const response = await fetch(
-      'https://db.lab.rcw.lol/api/database/rows/table/779/?user_field_names=true',
-      {
-        headers: {
-          Authorization: `Token ${import.meta.env.BASEROW_DB_TOKEN}`,
-        },
-      },
+    const data = await fetchAllBaserowRows<any>(
+      '/api/database/rows/table/779/?user_field_names=true',
     )
-    const data = await response.json()
 
-    return data.results.map((item: any) => ({
+    return data.map((item: any) => ({
       ...item,
       'id': String(item.id),
     }))
