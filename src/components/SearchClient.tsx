@@ -230,7 +230,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
         <input
           id="vod-search"
           autoFocus
-          className="w-full border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border bg-background px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-ring"
           placeholder="Search VODs and shows..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -252,7 +252,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
 
       {/* Instruction card when no query */}
       {!query && (
-  <div className="bg-card flex flex-col justify-between gap-4 border p-6 shadow-sm sm:flex-row">
+  <div className="bg-card flex flex-col justify-between gap-4 border p-6 shadow-xs sm:flex-row">
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-semibold">Introducing search!</h2>
             <span className="text-left text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
               >
                 {/* Hover overlay */}
                 <div className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
+                  <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/20" />
                 </div>
                 {/* The actual stuff */}
                 <div className="w-full aspect-video overflow-hidden sm:flex-none sm:h-24 sm:w-44">
@@ -334,7 +334,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
                 <div className="flex min-w-0 justify-center flex-1 flex-col p-3">
                   <div className="flex items-center gap-2">
                     {result.type === 'episode' && (
-                      <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+                      <span className="inline-flex items-center rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
                         <Tv size="10" className="mr-1" />
                         Show
                       </span>
@@ -373,7 +373,7 @@ export default function SearchClient({ initialQuery = '' }: Props) {
 
       {/* No results found */}
       {vodIndex && episodeIndex && query && combinedResults.length === 0 && (
-        <div className="bg-card flex flex-col items-center justify-center gap-2 border p-6 text-sm text-muted-foreground shadow-sm">
+        <div className="bg-card flex flex-col items-center justify-center gap-2 border p-6 text-sm text-muted-foreground shadow-xs">
           <FileQuestion size={32} />
           <p>We couldn't find anything. Try different keywords.</p>
         </div>

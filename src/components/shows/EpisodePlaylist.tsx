@@ -63,7 +63,7 @@ export function EpisodePlaylist({
                   <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]">
+              <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
                 {show.seasons.map((season) => (
                   <DropdownMenuItem
                     key={season.id}

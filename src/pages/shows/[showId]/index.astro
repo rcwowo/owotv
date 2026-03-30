@@ -16,7 +16,7 @@ const { show } = Astro.props
 ---
 
 <Layout title={show.title} description={show.description}>
-  <main class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
     <div class="mb-4">
       <Breadcrumbs
         items={[{ label: 'Shows', href: '/shows' }, { label: show.title }]}

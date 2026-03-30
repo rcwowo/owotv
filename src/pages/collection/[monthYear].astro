@@ -41,7 +41,7 @@ const { monthYear, vods } = Astro.props
 ---
 
 <Layout title={`${monthYear} VODs`} description={`Archive of Twitch streams from ${monthYear}`}>
-  <main class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
     <div class="py-4">
       <Breadcrumbs
         items={[

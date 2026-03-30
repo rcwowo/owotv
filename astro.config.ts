@@ -1,17 +1,17 @@
 import react from '@astrojs/react'
 import sitemap from '@astrojs/sitemap'
-import tailwind from '@astrojs/tailwind'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 
 import icon from 'astro-icon'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://ltwilson.tv',
+  site: 'https://owo.rcw.lol',
+  vite: {
+    plugins: [tailwindcss()],
+  },
   integrations: [
-    tailwind({
-      applyBaseStyles: false,
-    }),
     sitemap(),
     react(),
     icon(),

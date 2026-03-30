@@ -29,7 +29,7 @@ const { title, description, image, className } = Astro.props
       class={cn("box-border flex h-fit min-h-screen flex-col gap-y-6 font-sans antialiased", className)}
     >
       <Header />
-      <main transition:animate="fade" class="flex-grow">
+      <main transition:animate="fade" class="grow">
         <slot />
       </main>
       <Footer />

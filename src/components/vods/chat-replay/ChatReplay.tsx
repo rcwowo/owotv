@@ -354,7 +354,7 @@ export default function ChatReplay({
             {visibleComments.map((comment) => (
               <div
                 key={comment._id}
-                className="break-words text-sm leading-tight"
+                className="wrap-break-word text-sm leading-tight"
               >
                 <span
                   className="font-semibold"

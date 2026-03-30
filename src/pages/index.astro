@@ -71,20 +71,20 @@ const recentGames = Object.entries(vodsByGame)
         <img
           src={featuredVod.data['Thumbnail URL']}
           alt=""
-          class="h-full w-full scale-105 object-cover opacity-30 blur-sm"
+          class="h-full w-full scale-105 object-cover opacity-30 blur-xs"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40"
+          class="absolute inset-0 bg-linear-to-t from-background via-background/80 to-background/40"
         >
         </div>
         <div
-          class="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background"
+          class="absolute inset-0 bg-linear-to-r from-background via-transparent to-background"
         >
         </div>
       </div>
 
       <div
-        class="relative mx-auto max-w-screen-xl px-4 pb-16 pt-12 sm:px-6 lg:px-8"
+        class="relative mx-auto max-w-(--breakpoint-xl) px-4 pb-16 pt-12 sm:px-6 lg:px-8"
       >
         <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
           <!-- Hero Text -->
@@ -127,7 +127,7 @@ const recentGames = Object.entries(vodsByGame)
           <!-- Featured VOD Card -->
           <div class="relative">
             <div
-              class="absolute -inset-4 bg-gradient-to-r from-primary/20 via-accent/20 to-additive/20 opacity-50 blur-2xl"
+              class="absolute -inset-4 bg-linear-to-r from-primary/20 via-accent/20 to-additive/20 opacity-50 blur-2xl"
             >
             </div>
             <div class="relative overflow-hidden border bg-card shadow-2xl">
@@ -139,7 +139,7 @@ const recentGames = Object.entries(vodsByGame)
                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+                    class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"
                   >
                   </div>
 
@@ -162,7 +162,7 @@ const recentGames = Object.entries(vodsByGame)
                       Latest
                     </span>
                     <span
-                      class="bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm"
+                      class="bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-xs"
                     >
                       {featuredVod.data['Game']}
                     </span>
@@ -170,7 +170,7 @@ const recentGames = Object.entries(vodsByGame)
 
                   <div class="absolute right-3 top-3">
                     <span
-                      class="flex items-center gap-1 bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm"
+                      class="flex items-center gap-1 bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-xs"
                     >
                       <Icon name="lucide:clock" class="h-3 w-3" />
                       {featuredVod.data['Duration']}
@@ -206,7 +206,7 @@ const recentGames = Object.entries(vodsByGame)
     </section>
 
     <!-- Recent VODs Section -->
-    <section class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
       <div class="mb-6 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div
@@ -236,7 +236,7 @@ const recentGames = Object.entries(vodsByGame)
     <!-- Shows Section -->
     {
       shows.length > 0 && (
-        <section class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+        <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
           <div class="mb-6 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="flex h-10 w-10 items-center justify-center bg-accent/10 text-accent">
@@ -266,7 +266,7 @@ const recentGames = Object.entries(vodsByGame)
     }
 
     <!-- Recently Streamed Games Section -->
-    <section class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
       <div class="mb-6 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div
@@ -304,7 +304,7 @@ const recentGames = Object.entries(vodsByGame)
     </section>
 
     <!-- Quick Links / Browse Section -->
-    <section class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
       <div class="border bg-card/50 p-6 sm:p-8">
         <div class="mb-4 text-center">
           <h2 class="text-2xl font-bold tracking-tight">Explore the Archive</h2>
@@ -375,7 +375,7 @@ const recentGames = Object.entries(vodsByGame)
     </section>
 
     <!-- FAQ Section -->
-    <section class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
       <div class="border bg-card/50 p-6 sm:p-8">
         <div class="mb-4 text-center">
           <h2 class="text-2xl font-bold tracking-tight">

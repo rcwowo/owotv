@@ -15,7 +15,7 @@ const { vod} = Astro.props
     class="group relative block h-full w-full overflow-hidden border bg-card"
   >
   <div class="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary"></div>
-  <div class="absolute inset-x-0 top-0 z-30 h-0.5 bg-gradient-to-r from-primary to-accent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+  <div class="absolute inset-x-0 top-0 z-30 h-0.5 bg-linear-to-r from-primary to-accent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
 
     <img
       src={vod.data['Thumbnail URL']}
@@ -25,33 +25,33 @@ const { vod} = Astro.props
     />
 
     <div class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/30"></div>
     </div>
 
     <div class="absolute left-0 right-0 top-0 z-30 p-2">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-sm border border-white/10">
+        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-xs border border-white/10">
           {vod.data['Stream Date'].toLocaleDateString('en-US', {
             month: 'long',
             day: 'numeric',
             year: 'numeric'
           })}
         </span>
-        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-sm border border-white/10 flex items-center gap-1">
+        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-xs border border-white/10 flex items-center gap-1">
           <Icon name="lucide:clock" />
           {vod.data['Duration']}
         </span>
       </div>
     </div>
 
-    <div class='absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/70 to-transparent transition-transform duration-500'>
-      <div class="border-t border-white/10 bg-black/50 backdrop-blur-sm px-3 py-2">
+    <div class='absolute bottom-0 left-0 right-0 z-20 bg-linear-to-t from-black/70 to-transparent transition-transform duration-500'>
+      <div class="border-t border-white/10 bg-black/50 backdrop-blur-xs px-3 py-2">
         <h3 class='truncate text-lg font-semibold text-white'>
           {vod.data['Title']}
         </h3>
       </div>
     </div>
 
-    <div class="pointer-events-none absolute left-[-30%] top-0 z-40 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"></div>
+    <div class="pointer-events-none absolute left-[-30%] top-0 z-40 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"></div>
   </a>
 </div>

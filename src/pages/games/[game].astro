@@ -37,7 +37,7 @@ const { game, vods, coverUrl } = Astro.props
   description={`Archive of Twitch streams playing ${game}`}
   image={coverUrl}
 >
-  <main class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
     <div class="py-4">
       <Breadcrumbs
         items={[
@@ -47,7 +47,7 @@ const { game, vods, coverUrl } = Astro.props
       />
     </div>
     <div class="flex flex-row items-center mb-8">
-      {coverUrl && <img src={coverUrl} alt="" class="aspect-[3/4] max-h-28 mr-4 object-cover" />}
+      {coverUrl && <img src={coverUrl} alt="" class="aspect-3/4 max-h-28 mr-4 object-cover" />}
       <div class="flex flex-col">
         <h1 class="text-4xl font-bold flex items-center">
           {game}
