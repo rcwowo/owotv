@@ -2,7 +2,6 @@
 import Footer from '@/components/Footer.astro'
 import Head from '@/components/Head.astro'
 import Header from '@/components/Header.astro'
-import Analyitcs from '@vercel/analytics/astro'
 import { cn } from '@/lib/utils'
 import { SITE } from '@/consts'
 
@@ -35,7 +34,5 @@ const { title, description, image, className } = Astro.props
       </main>
       <Footer />
     </div>
-    <!-- Vercel Analytics -->
-    <Analyitcs />
   </body>
 </html>
