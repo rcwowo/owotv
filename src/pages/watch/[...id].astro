@@ -4,7 +4,6 @@ import { buttonVariants } from '@/components/ui/button'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubeVideoID } from '@/lib/utils'
 import { Icon } from 'astro-icon/components'
-import Image from 'astro/components/Image.astro'
 import { getCollection, type CollectionEntry } from 'astro:content'
 
 export async function getStaticPaths() {
@@ -57,11 +56,12 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
             }
           </p>
         </div>
-        <Image
+        <img
           src={vod.data['Game Cover URL']}
           alt={`Game cover for ${vod.data['Game']}`}
-          width={32}
-          height={32}
+          width="32"
+          height="32"
+          class="size-8 rounded object-cover"
         />
       </div>
     </div>

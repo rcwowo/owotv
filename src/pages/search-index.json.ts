@@ -114,7 +114,7 @@ export async function GET() {
         index.push({
           type: 'episode',
           title,
-          subtitle: `${show.title} · ${season.title}`,
+          subtitle: `${show.title} · ${season.title} · ${dateDisplay}`,
           category: 'Episode',
           href: `/shows/${show.id}/${season.id}/${episode.id}`,
           searchText: blob.text,
