@@ -21,13 +21,19 @@ const { title, description, image = '/static/twitter-card.webp' } = Astro.props
 
 <link rel="canonical" href={canonicalURL} />
 <link rel="sitemap" href="/sitemap-index.xml" />
-<link rel="icon" type="image/png" href="/static/logo.webp" />
+<link rel="icon" type="image/png" href="/static/favicon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap"
+  rel="stylesheet"
+/>
 
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
-<meta name="theme-color" content="#f4f1ff" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0b0b14" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#0b0a10" />
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content={Astro.url} />
@@ -43,39 +49,3 @@ const { title, description, image = '/static/twitter-card.webp' } = Astro.props
 <meta property="twitter:image" content={new URL(image, Astro.url)} />
 
 <ClientRouter />
-
-<script is:inline>
-  function setDarkMode(document) {
-    const getThemePreference = () => {
-      if (
-        typeof localStorage !== 'undefined' &&
-        localStorage.getItem('theme')
-      ) {
-        return localStorage.getItem('theme')
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'theme-light'
-    }
-    const isDark = getThemePreference() === 'dark'
-    document.documentElement.classList[isDark ? 'add' : 'remove']('dark')
-
-    if (typeof localStorage !== 'undefined') {
-      const observer = new MutationObserver(() => {
-        const isDark = document.documentElement.classList.contains('dark')
-        localStorage.setItem('theme', isDark ? 'dark' : 'theme-light')
-      })
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class'],
-      })
-    }
-  }
-
-  setDarkMode(document)
-
-  document.addEventListener('astro:before-swap', (ev) => {
-    // Pass the incoming document to set the theme on it
-    setDarkMode(ev.newDocument)
-  })
-</script>

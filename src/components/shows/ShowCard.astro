@@ -11,32 +11,20 @@ const { show } = Astro.props
 <div class="relative aspect-video">
   <a
     href={`/shows/${show.id}`}
-    class="group relative block h-full w-full overflow-hidden border bg-card"
+    class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   >
-    {/* Top Accent Lines */}
-    <div class="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary"></div>
-    <div
-      class="absolute inset-x-0 top-0 z-30 h-0.5 bg-linear-to-r from-primary to-accent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-    >
-    </div>
-
     <img
       src={show.coverUrl}
       alt={show.title}
-      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+      class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
     />
 
-    {/* Hover Overlay */}
     <div
-      class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+      class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
     >
-      <div
-        class="absolute inset-0 bg-linear-to-b from-black/30 to-black/90"
-      >
-      </div>
+      <div class="absolute inset-0 bg-linear-to-b from-black/30 to-black/90"></div>
     </div>
 
-    {/* Content - Slides up on hover */}
     <div
       class="absolute inset-x-0 bottom-0 p-6 opacity-0 transition-all duration-300 group-hover:opacity-100"
     >
@@ -48,7 +36,7 @@ const { show } = Astro.props
       </p>
       <div class="flex items-center gap-3 text-xs font-medium text-gray-300">
         <span
-          class="border border-white/10 bg-black/45 px-2 py-0.5 backdrop-blur-xs"
+          class="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-white backdrop-blur-sm"
         >
           {show.seasons.length} Season{show.seasons.length !== 1 && 's'}
         </span>
@@ -56,7 +44,7 @@ const { show } = Astro.props
     </div>
 
     <div
-      class="pointer-events-none absolute left-[-30%] top-0 z-40 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"
+      class="pointer-events-none absolute left-[-30%] top-0 z-10 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"
     >
     </div>
   </a>

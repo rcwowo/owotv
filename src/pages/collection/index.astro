@@ -1,7 +1,13 @@
 ---
-import Layout from '@/layouts/Layout.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import Layout from '@/layouts/Layout.astro'
+import { cn } from '@/lib/utils'
 import { getCollection } from 'astro:content'
 
 const vods = await getCollection('vods')
@@ -9,7 +15,6 @@ const sortedVods = vods.sort(
   (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
 )
 
-// Group VODs by year, then by month
 const vodsByYear = sortedVods.reduce(
   (acc: Record<string, Record<string, typeof vods>>, vod) => {
     const year = vod.data['Stream Date'].getFullYear().toString()
@@ -17,7 +22,7 @@ const vodsByYear = sortedVods.reduce(
       month: 'long',
       year: 'numeric',
     })
-    
+
     if (!acc[year]) {
       acc[year] = {}
     }
@@ -30,42 +35,126 @@ const vodsByYear = sortedVods.reduce(
   {} as Record<string, Record<string, typeof vods>>,
 )
 
-// Sort years in descending order
-const sortedYears = Object.keys(vodsByYear).sort((a, b) => parseInt(b) - parseInt(a))
+const sortedYears = Object.keys(vodsByYear).sort(
+  (a, b) => parseInt(b) - parseInt(a),
+)
+
+const sortMonths = (months: [string, typeof vods][]) =>
+  months.sort(
+    (a, b) =>
+      b[1][0]!.data['Stream Date'].valueOf() -
+      a[1][0]!.data['Stream Date'].valueOf(),
+  )
+
+const videoLabel = (count: number) =>
+  `${count} ${count === 1 ? 'video' : 'videos'}`
 ---
 
-<Layout title="VOD Collections" description="Collections of previous streams, sorted by month.">
-    <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-        <div class="pb-4">
-            <Breadcrumbs
-                items={[
-                { href: '/collection', label: 'Collections', icon: 'lucide:folder'}
-                ]}
-          />
-        </div>
-        {sortedYears.map((year) => (
-          <div class="mb-8">
-            <h2 class="text-3xl font-bold mb-4">{year}</h2>
-            <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {Object.entries(vodsByYear[year]).map(([monthYear, monthVods]) => (
-                <Card className="hover:bg-accent transition-colors">
-                  <a
-                    href={`/collection/${monthYear.toLowerCase().replace(' ', '-')}`}
-                    class="block h-full"
+<Layout
+  title="VOD Collections"
+  description="Collections of previous streams, sorted by month."
+>
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
+    <div class="py-4 space-y-4">
+      <Breadcrumbs
+        items={[
+          { href: '/collection', label: 'Collections', icon: 'lucide:folder' },
+        ]}
+      />
+      <h1 class="text-4xl font-bold tracking-tight">Collections</h1>
+    </div>
+
+    <div class="relative mb-10" data-collection-timeline>
+      <span
+        class="timeline-spine pointer-events-none absolute left-[5px] z-0 w-0.5 -translate-x-1/2 bg-border"
+        aria-hidden="true"
+      />
+
+      <ol class="relative m-0 list-none">
+        {
+          sortedYears.map((year, yearIndex) => {
+            const months = sortMonths(Object.entries(vodsByYear[year]!))
+            const isFirst = yearIndex === 0
+            const isLast = yearIndex === sortedYears.length - 1
+
+            return (
+              <li class={cn('flex gap-4 sm:gap-5', !isLast && 'pb-10')}>
+                <div class="relative z-10 flex h-9 w-3 shrink-0 items-center justify-center">
+                  <span
+                    class={cn(
+                      'timeline-dot size-3 shrink-0 rounded-full border-2 border-background bg-border ring-2 ring-border',
+                      isFirst && 'bg-accent ring-accent/30',
+                    )}
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <h2
+                    class="flex h-9 items-center text-3xl font-bold tracking-tight"
                   >
-                    <CardHeader className="space-y-1">
-                      <CardTitle className="text-2xl text-center">
-                        {monthYear.split(' ')[0]}
-                      </CardTitle>
-                      <CardDescription className="text-center">
-                        {monthVods.length} video{monthVods.length === 1 ? '' : 's'}
-                      </CardDescription>
-                    </CardHeader>
-                  </a>
-                </Card>
-              ))}
-            </div>
-          </div>
-        ))}
-    </main>
+                    {year}
+                  </h2>
+
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {
+                      months.map(([monthYear, monthVods]) => (
+                        <Card className="transition-colors hover:border-border hover:bg-secondary/50">
+                          <a
+                            href={`/collection/${monthYear.toLowerCase().replace(' ', '-')}`}
+                            class="block h-full"
+                          >
+                            <CardHeader className="space-y-0">
+                              <CardTitle className="text-center text-2xl">
+                                {monthYear.split(' ')[0]}
+                              </CardTitle>
+                              <CardDescription className="text-center">
+                                {videoLabel(monthVods.length)}
+                              </CardDescription>
+                            </CardHeader>
+                          </a>
+                        </Card>
+                      ))
+                    }
+                  </div>
+                </div>
+              </li>
+            )
+          })
+        }
+      </ol>
+    </div>
+  </main>
 </Layout>
+
+<script>
+  const sizeCollectionTimeline = () => {
+    const root = document.querySelector('[data-collection-timeline]')
+    const spine = root?.querySelector(
+      '.timeline-spine',
+    ) as HTMLElement | null
+    const firstDot = root?.querySelector('.timeline-dot')
+    const lastDot = root?.querySelector('li:last-child .timeline-dot')
+
+    if (!root || !spine || !firstDot || !lastDot) return
+
+    const rootRect = root.getBoundingClientRect()
+    const firstRect = firstDot.getBoundingClientRect()
+    const lastRect = lastDot.getBoundingClientRect()
+
+    const top = firstRect.top - rootRect.top + firstRect.height / 2
+    const bottom = lastRect.top - rootRect.top + lastRect.height / 2
+
+    spine.style.top = `${top}px`
+    spine.style.height = `${Math.max(0, bottom - top)}px`
+  }
+
+  const root = document.querySelector('[data-collection-timeline]')
+  if (root) {
+    new ResizeObserver(sizeCollectionTimeline).observe(root)
+  }
+
+  sizeCollectionTimeline()
+  window.addEventListener('resize', sizeCollectionTimeline)
+  document.addEventListener('astro:page-load', sizeCollectionTimeline)
+</script>

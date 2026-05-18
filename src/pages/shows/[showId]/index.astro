@@ -1,5 +1,6 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import EpisodeCard from '@/components/shows/EpisodeCard.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getShows } from '@/lib/shows'
 import { Icon } from 'astro-icon/components'
@@ -17,13 +18,13 @@ const { show } = Astro.props
 
 <Layout title={show.title} description={show.description}>
   <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-    <div class="mb-4">
+    <div class="py-4">
       <Breadcrumbs
         items={[{ label: 'Shows', href: '/shows' }, { label: show.title }]}
       />
     </div>
     {/* Hero Section */}
-    <div class="relative h-[40vh] min-h-[400px] w-full">
+    <div class="relative mt-4 h-[40vh] min-h-[400px] w-full">
       <div class="absolute inset-0">
         <img
           src={show.coverUrl}
@@ -63,42 +64,12 @@ const { show } = Astro.props
               <h2 class="border-b pb-2 text-2xl font-semibold tracking-tight">
                 {season.title}
               </h2>
-              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {season.episodes.map((episode) => (
-                  <a
+                  <EpisodeCard
+                    episode={episode}
                     href={`/shows/${show.id}/${season.id}/${episode.id}`}
-                    class="group flex flex-col space-y-3 border bg-card p-3 transition-colors hover:bg-secondary/50"
-                  >
-                    <div class="relative aspect-video overflow-hidden bg-muted">
-                      <div class="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary" />
-                      <img
-                        src={episode.thumbnailUrl}
-                        alt={episode.title}
-                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div class="absolute bottom-2 right-2 bg-black/80 px-1 py-0.5 text-xs text-white">
-                        {episode.duration}
-                      </div>
-                      <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                        <div class="bg-primary/90 p-2 text-primary-foreground">
-                          <Icon
-                            name="lucide:play"
-                            class="size-6 fill-current"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div class="space-y-1">
-                      <h3 class="font-medium leading-none transition-colors group-hover:text-primary">
-                        {episode.title}
-                      </h3>
-                      <p class="text-xs text-muted-foreground">
-                        {episode.airDate.toLocaleDateString(undefined, {
-                          dateStyle: 'medium',
-                        })}
-                      </p>
-                    </div>
-                  </a>
+                  />
                 ))}
               </div>
             </div>

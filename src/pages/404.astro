@@ -4,30 +4,23 @@ import { buttonVariants } from '@/components/ui/button'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
 import { cn } from '@/lib/utils'
-import { Icon } from 'astro-icon/components'
 ---
 
 <Layout title="404" description={SITE.DESCRIPTION}>
   <section
-    class="mt-6 flex flex-col items-center justify-center gap-y-4 text-center"
+    class="flex flex-col h-screen items-center justify-center text-center gap-6"
   >
-    <Icon name="lucide:file-question" width={50} height={50} />
+    <img src="/static/x_x.png" alt="404" class="h-12" />
     <div class="max-w-md">
-      <h1 class="mb-4 text-3xl font-bold">404</h1>
-      <p class="prose prose-neutral dark:prose-invert">
-        The page you're looking for doesn't appear to exist. Please check your URL or return home.
+      <p>
+        Umm... nothing is here...
+        <br />
+        You might be lost.
       </p>
     </div>
-    <Link
-      href="/"
-      class={cn(
-        buttonVariants({ variant: 'outline' }),
-        'flex gap-x-1.5 group',
-      )}
-    >
-      <span class="transition-transform group-hover:-translate-x-1"
-        >&larr;</span
-      > Go to home page
+    <Link href="/" class={cn(buttonVariants(), 'flex gap-x-1.5 group')}>
+      <span class="transition-transform group-hover:-translate-x-1">&larr;</span
+      > Go back home!
     </Link>
   </section>
 </Layout>

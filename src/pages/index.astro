@@ -1,32 +1,30 @@
 ---
+import Container from '@/components/Container.astro'
+import ContentRow from '@/components/ContentRow.astro'
+import ExplorePanel from '@/components/ExplorePanel.astro'
 import FaqAccordion from '@/components/FaqAccordion'
+import Footer from '@/components/Footer.astro'
 import ShowCard from '@/components/shows/ShowCard.astro'
 import { buttonVariants } from '@/components/ui/button'
 import GameCard from '@/components/vods/GameCard.astro'
 import VodCard from '@/components/vods/VodCard.astro'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
+import { formatStreamDate } from '@/lib/date'
 import { getShows } from '@/lib/shows'
 import { cn } from '@/lib/utils'
 import { Icon } from 'astro-icon/components'
 import { getCollection } from 'astro:content'
 
-// Get all VODs sorted by stream date (newest first)
 const allVods = await getCollection('vods')
 const sortedVods = allVods.sort(
   (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
 )
 
-// Latest VODs (first 6)
-const latestVods = sortedVods.slice(0, 6)
-
-// Featured VOD (the most recent one)
+const latestVods = sortedVods.slice(0, 12)
 const featuredVod = sortedVods[0]
-
-// Get shows with their episodes
 const shows = await getShows()
 
-// Get games with recent activity
 const vodsByGame = sortedVods.reduce(
   (
     acc: Record<
@@ -52,340 +50,135 @@ const vodsByGame = sortedVods.reduce(
   >,
 )
 
-// Sort games by most recent stream date
 const recentGames = Object.entries(vodsByGame)
   .sort((a, b) => b[1].latestDate.valueOf() - a[1].latestDate.valueOf())
-  .slice(0, 6)
+  .slice(0, 12)
 ---
 
 <Layout
   title="Home"
   description={SITE.DESCRIPTION}
   image={featuredVod?.data['Thumbnail URL']}
+  headerOverlay
   className="gap-y-0"
 >
-  <div class="space-y-12 pb-12">
-    <!-- Hero Section with Featured VOD -->
-    <section class="relative">
-      <div class="absolute inset-0 overflow-hidden">
-        <img
-          src={featuredVod.data['Thumbnail URL']}
-          alt=""
-          class="h-full w-full scale-105 object-cover opacity-30 blur-xs"
-        />
-        <div
-          class="absolute inset-0 bg-linear-to-t from-background via-background/80 to-background/40"
-        >
+  {
+    featuredVod && (
+      <section class="relative h-[min(52vh,32rem)] min-h-80 max-h-128">
+        <div class="absolute inset-0 overflow-hidden">
+          <img
+            src={featuredVod.data['Thumbnail URL']}
+            alt=""
+            class="h-full w-full scale-105 object-cover blur-[2px]"
+            fetchpriority="high"
+          />
+          <div class="absolute inset-0 bg-linear-to-t from-background via-background/75 to-background/25" />
+          <div class="absolute inset-0 bg-linear-to-r from-background/85 via-transparent to-background/35" />
         </div>
-        <div
-          class="absolute inset-0 bg-linear-to-r from-background via-transparent to-background"
-        >
-        </div>
-      </div>
 
-      <div
-        class="relative mx-auto max-w-(--breakpoint-xl) px-4 pb-16 pt-12 sm:px-6 lg:px-8"
-      >
-        <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <!-- Hero Text -->
-          <div class="space-y-6">
-            <h1
-              class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl"
-            >
-              {SITE.TITLE}
-            </h1>
-
-            <p class="max-w-xl text-lg text-muted-foreground">
-              {SITE.DESCRIPTION}
-            </p>
-
-            <!-- CTA Buttons -->
-            <div class="flex flex-wrap gap-3 pt-2">
+        <div class="relative flex h-full flex-col justify-end pb-8 pt-16 sm:pb-10">
+          <Container class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div class="max-w-3xl space-y-4">
+              <h1 class="font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-[2.5rem]">
+                {featuredVod.data['Title']}
+              </h1>
+              <p class="text-sm text-muted-foreground">
+                Streamed on {formatStreamDate(featuredVod.data['Stream Date'])} •{' '}
+                {featuredVod.data['Duration']}
+              </p>
               <a
-                href="/vods"
+                href={`/watch/${featuredVod.id}`}
                 class={cn(
-                  buttonVariants({ variant: 'default', size: 'lg' }),
-                  'gap-2',
+                  buttonVariants({ variant: 'secondary', size: 'lg' }),
+                  'h-10 gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-lg hover:bg-primary/90 sm:h-11 sm:px-6',
                 )}
               >
-                <Icon name="lucide:play" class="h-4 w-4" />
-                Browse VODs
-              </a>
-              <a
-                href="/shows"
-                class={cn(
-                  buttonVariants({ variant: 'outline', size: 'lg' }),
-                  'gap-2',
-                )}
-              >
-                <Icon name="lucide:tv" class="h-4 w-4" />
-                View Shows
+                <Icon name="lucide:eye" class="size-4" />
+                Watch VOD
               </a>
             </div>
-          </div>
 
-          <!-- Featured VOD Card -->
-          <div class="relative">
-            <div
-              class="absolute -inset-4 bg-linear-to-r from-primary/20 via-accent/20 to-additive/20 opacity-50 blur-2xl"
-            >
-            </div>
-            <div class="relative overflow-hidden border bg-card shadow-2xl">
-              <a href={`/watch/${featuredVod.id}`} class="group block">
-                <div class="relative aspect-video overflow-hidden">
+            {
+              featuredVod.data['Game Cover URL'] && (
+                <a
+                  href={`/games/${(featuredVod.data['Game'] || 'Other').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                  class="group hidden shrink-0 sm:block"
+                >
                   <img
-                    src={featuredVod.data['Thumbnail URL']}
-                    alt={featuredVod.data['Title']}
-                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    src={featuredVod.data['Game Cover URL']}
+                    alt={featuredVod.data['Game']}
+                    class="h-36 w-auto rounded-xl border border-white/10 shadow-2xl transition-transform duration-300 group-hover:scale-[1.03] lg:h-40"
+                    width="120"
+                    height="176"
                   />
-                  <div
-                    class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"
-                  >
-                  </div>
-
-                  <!-- Play Button Overlay -->
-                  <div
-                    class="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  >
-                    <div
-                      class="flex h-16 w-16 items-center justify-center bg-primary text-primary-foreground shadow-lg"
-                    >
-                      <Icon name="lucide:play" class="h-8 w-8" />
-                    </div>
-                  </div>
-
-                  <!-- Badges -->
-                  <div class="absolute left-3 top-3 flex flex-wrap gap-2">
-                    <span
-                      class="bg-primary px-2 py-1 text-xs font-medium text-primary-foreground"
-                    >
-                      Latest
-                    </span>
-                    <span
-                      class="bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-xs"
-                    >
-                      {featuredVod.data['Game']}
-                    </span>
-                  </div>
-
-                  <div class="absolute right-3 top-3">
-                    <span
-                      class="flex items-center gap-1 bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-xs"
-                    >
-                      <Icon name="lucide:clock" class="h-3 w-3" />
-                      {featuredVod.data['Duration']}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="p-4">
-                  <h2
-                    class="line-clamp-1 text-lg font-semibold transition-colors group-hover:text-primary"
-                  >
-                    {featuredVod.data['Title']}
-                  </h2>
-                  <p class="text-sm text-muted-foreground">
-                    {
-                      featuredVod.data['Stream Date'].toLocaleDateString(
-                        'en-US',
-                        {
-                          weekday: 'long',
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        },
-                      )
-                    }
-                  </p>
-                </div>
-              </a>
-            </div>
-          </div>
+                </a>
+              )
+            }
+          </Container>
         </div>
-      </div>
-    </section>
+      </section>
+    )
+  }
 
-    <!-- Recent VODs Section -->
-    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-      <div class="mb-6 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center bg-primary/10 text-primary"
-          >
-            <Icon name="lucide:video" class="h-5 w-5" />
+  <div class="space-y-10 bg-background py-8 sm:space-y-12 sm:py-10">
+    <ContentRow title="Latest VODs" viewAllHref="/vods">
+      {
+        latestVods.map((vod) => (
+          <div class="w-72 shrink-0 sm:w-80">
+            <VodCard vod={vod} />
           </div>
-          <h2 class="text-2xl font-bold tracking-tight">Recent VODs</h2>
-        </div>
-        <a
-          href="/vods"
-          class={cn(
-            buttonVariants({ variant: 'ghost' }),
-            'gap-2 text-muted-foreground hover:text-foreground',
-          )}
-        >
-          View All
-          <Icon name="lucide:arrow-right" class="h-4 w-4" />
-        </a>
-      </div>
+        ))
+      }
+    </ContentRow>
 
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {latestVods.map((vod) => <VodCard vod={vod} />)}
-      </div>
-    </section>
-
-    <!-- Shows Section -->
     {
       shows.length > 0 && (
-        <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-          <div class="mb-6 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center bg-accent/10 text-accent">
-                <Icon name="lucide:tv" class="h-5 w-5" />
-              </div>
-              <h2 class="text-2xl font-bold tracking-tight">Shows</h2>
-            </div>
-            <a
-              href="/shows"
-              class={cn(
-                buttonVariants({ variant: 'ghost' }),
-                'gap-2 text-muted-foreground hover:text-foreground',
-              )}
-            >
-              View All
-              <Icon name="lucide:arrow-right" class="h-4 w-4" />
-            </a>
-          </div>
-
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {shows.slice(0, 3).map((show) => (
+        <ContentRow title="Featured Shows" viewAllHref="/shows">
+          {shows.map((show) => (
+            <div class="w-72 shrink-0 sm:w-80">
               <ShowCard show={show} />
-            ))}
-          </div>
-        </section>
+            </div>
+          ))}
+        </ContentRow>
       )
     }
 
-    <!-- Recently Streamed Games Section -->
-    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-      <div class="mb-6 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center bg-additive/10 text-additive"
-          >
-            <Icon name="lucide:gamepad-2" class="h-5 w-5" />
-          </div>
-          <h2 class="text-2xl font-bold tracking-tight">Recently Played</h2>
-        </div>
-        <a
-          href="/games"
-          class={cn(
-            buttonVariants({ variant: 'ghost' }),
-            'gap-2 text-muted-foreground hover:text-foreground',
-          )}
-        >
-          View All
-          <Icon name="lucide:arrow-right" class="h-4 w-4" />
-        </a>
-      </div>
-
-      <div
-        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
-      >
-        {
-          recentGames.map(([game, { vods: gameVods, coverUrl }]) => (
+    <ContentRow title="Recently Played Games" viewAllHref="/games">
+      {
+        recentGames.map(([game, { vods: gameVods, coverUrl }]) => (
+          <div class="w-28 shrink-0 sm:w-32">
             <GameCard
               game={game}
               coverUrl={coverUrl}
               vodCount={gameVods.length}
             />
-          ))
-        }
-      </div>
-    </section>
+          </div>
+        ))
+      }
+    </ContentRow>
 
-    <!-- Quick Links / Browse Section -->
-    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-      <div class="border bg-card/50 p-6 sm:p-8">
-        <div class="mb-4 text-center">
-          <h2 class="text-2xl font-bold tracking-tight">Explore the Archive</h2>
+    <Container>
+      <div class="grid gap-8 lg:grid-cols-2 lg:gap-10">
+        <div class="flex flex-col gap-4">
+          <h2 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+            Explore {SITE.TITLE}
+          </h2>
+          <ExplorePanel />
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <a
-            href="/vods"
-            class="group flex flex-col items-center gap-3 border bg-background p-6 transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/5"
-          >
-            <div
-              class="flex h-12 w-12 items-center justify-center bg-primary/10 text-primary transition-transform group-hover:scale-110"
-            >
-              <Icon name="lucide:video" class="h-6 w-6" />
-            </div>
-            <div class="text-center">
-              <h3 class="font-semibold">VODs</h3>
-              <p class="text-sm text-muted-foreground">All archived streams</p>
-            </div>
-          </a>
-
-          <a
-            href="/shows"
-            class="group flex flex-col items-center gap-3 border bg-background p-6 transition-all hover:border-accent hover:shadow-lg hover:shadow-accent/5"
-          >
-            <div
-              class="flex h-12 w-12 items-center justify-center bg-accent/10 text-accent transition-transform group-hover:scale-110"
-            >
-              <Icon name="lucide:tv" class="h-6 w-6" />
-            </div>
-            <div class="text-center">
-              <h3 class="font-semibold">Shows</h3>
-              <p class="text-sm text-muted-foreground">Curated playlists</p>
-            </div>
-          </a>
-
-          <a
-            href="/games"
-            class="group flex flex-col items-center gap-3 border bg-background p-6 transition-all hover:border-additive hover:shadow-lg hover:shadow-additive/5"
-          >
-            <div
-              class="flex h-12 w-12 items-center justify-center bg-additive/10 text-additive transition-transform group-hover:scale-110"
-            >
-              <Icon name="lucide:gamepad-2" class="h-6 w-6" />
-            </div>
-            <div class="text-center">
-              <h3 class="font-semibold">Games</h3>
-              <p class="text-sm text-muted-foreground">Find a streamed game</p>
-            </div>
-          </a>
-
-          <a
-            href="/collection"
-            class="group flex flex-col items-center gap-3 border bg-background p-6 transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/5"
-          >
-            <div
-              class="flex h-12 w-12 items-center justify-center bg-primary/10 text-primary transition-transform group-hover:scale-110"
-            >
-              <Icon name="lucide:calendar" class="h-6 w-6" />
-            </div>
-            <div class="text-center">
-              <h3 class="font-semibold">Date</h3>
-              <p class="text-sm text-muted-foreground">Find a stream by date</p>
-            </div>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
-      <div class="border bg-card/50 p-6 sm:p-8">
-        <div class="mb-4 text-center">
-          <h2 class="text-2xl font-bold tracking-tight">
+        <div class="flex flex-col gap-4">
+          <h2 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
             Frequently Asked Questions
           </h2>
-        </div>
-        <div class="border bg-background p-6">
-          <FaqAccordion siteTitle={SITE.TITLE} client:load />
+          <div
+            class="min-h-64 rounded-2xl border border-border/50 bg-card/40 p-4 sm:min-h-72 sm:p-5"
+          >
+            <FaqAccordion siteTitle={SITE.TITLE} client:load />
+          </div>
         </div>
       </div>
-    </section>
+    </Container>
   </div>
+
+  <Footer />
 </Layout>

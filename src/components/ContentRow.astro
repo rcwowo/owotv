@@ -1,0 +1,188 @@
+---
+import Container from '@/components/Container.astro'
+import { cn } from '@/lib/utils'
+
+interface Props {
+  title: string
+  viewAllHref?: string
+  viewAllLabel?: string
+  class?: string
+}
+
+const {
+  title,
+  viewAllHref,
+  viewAllLabel = 'View all',
+  class: className,
+} = Astro.props
+---
+
+<section class={cn('content-row-section space-y-4', className)}>
+  <Container>
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+        {title}
+      </h2>
+      {
+        viewAllHref && (
+          <a
+            href={viewAllHref}
+            class="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {viewAllLabel} &rarr;
+          </a>
+        )
+      }
+    </div>
+  </Container>
+
+  <Container class="content-row-outer relative">
+    <div
+      class="content-row-scroll -mx-4 overflow-x-auto overscroll-x-contain px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+    >
+      <div class="flex w-max min-w-full gap-4 sm:gap-5">
+        <slot />
+      </div>
+    </div>
+    <div
+      class="content-row-fade pointer-events-none absolute inset-y-0 right-0 z-10"
+      aria-hidden="true"
+    >
+    </div>
+  </Container>
+</section>
+
+<style is:global>
+  .content-row-section .content-row-outer {
+    --content-row-fade: 6rem;
+  }
+
+  @media (min-width: 640px) {
+    .content-row-section .content-row-outer {
+      --content-row-fade: 8rem;
+    }
+  }
+
+  .content-row-section .content-row-scroll {
+    /* Firefox: hidden until hover/focus */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.25s ease;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - var(--content-row-fade)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - var(--content-row-fade)),
+      transparent 100%
+    );
+  }
+
+  .content-row-section .content-row-scroll:hover,
+  .content-row-section .content-row-scroll:focus-within {
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  /* Firefox draws the bar too close to the content */
+  @supports (-moz-appearance: none) {
+    .content-row-section .content-row-scroll {
+      padding-bottom: calc(0.25rem + 4px);
+    }
+  }
+
+  /* Only show scrollbar on hover/focus in Chromium */
+  .content-row-section .content-row-scroll::-webkit-scrollbar {
+    height: 0;
+    transition: height 0.25s ease;
+  }
+
+  .content-row-section .content-row-scroll:hover::-webkit-scrollbar,
+  .content-row-section .content-row-scroll:focus-within::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .content-row-section .content-row-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .content-row-section .content-row-scroll::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 9999px;
+    opacity: 0;
+    transition:
+      opacity 0.25s ease,
+      background-color 0.25s ease;
+  }
+
+  .content-row-section .content-row-scroll:hover::-webkit-scrollbar-thumb,
+  .content-row-section
+    .content-row-scroll:focus-within::-webkit-scrollbar-thumb {
+    opacity: 1;
+  }
+
+  .content-row-section .content-row-fade {
+    width: var(--content-row-fade);
+    background: linear-gradient(
+      to left,
+      hsl(var(--background)) 15%,
+      hsl(var(--background) / 0.85) 45%,
+      transparent 100%
+    );
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+
+  .content-row-section .content-row-outer[data-no-overflow] .content-row-fade,
+  .content-row-section .content-row-outer[data-at-end] .content-row-fade {
+    opacity: 0;
+  }
+
+  .content-row-section .content-row-outer[data-no-overflow] .content-row-scroll,
+  .content-row-section .content-row-outer[data-at-end] .content-row-scroll {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+</style>
+
+<script>
+  function initContentRowFades() {
+    document
+      .querySelectorAll<HTMLElement>(
+        '.content-row-section .content-row-outer:not([data-fade-init])',
+      )
+      .forEach((outer) => {
+        const scroll = outer.querySelector<HTMLElement>('.content-row-scroll')
+        if (!scroll) return
+
+        outer.setAttribute('data-fade-init', '')
+
+        const update = () => {
+          const overflows = scroll.scrollWidth > scroll.clientWidth + 2
+          const atEnd =
+            scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 2
+          outer.toggleAttribute('data-no-overflow', !overflows)
+          outer.toggleAttribute('data-at-end', atEnd)
+        }
+
+        update()
+        scroll.addEventListener('scroll', update, { passive: true })
+        const ro = new ResizeObserver(update)
+        ro.observe(scroll)
+        const track = scroll.firstElementChild
+        if (track instanceof HTMLElement) ro.observe(track)
+
+        scroll.querySelectorAll('img').forEach((img) => {
+          if (!img.complete) {
+            img.addEventListener('load', update, { once: true })
+          }
+        })
+      })
+  }
+
+  initContentRowFades()
+  document.addEventListener('astro:page-load', initContentRowFades)
+</script>

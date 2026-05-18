@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NAV_LINKS } from '@/consts'
+import { cn } from '@/lib/utils'
 import { Menu } from 'lucide-react'
 
 const MobileMenu = () => {
@@ -32,21 +33,33 @@ const MobileMenu = () => {
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="md:hidden"
+            className={cn(
+              'header-menu-trigger sm:hidden',
+              'h-9 w-9 shrink-0 rounded-lg border p-0 shadow-none',
+              'hover:bg-secondary/60 focus-visible:ring-1',
+            )}
             title="Menu"
           >
-            <Menu size={16} />
+            <Menu className="size-4" />
             <span className="sr-only">Toggle menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-background">
+        <DropdownMenuContent
+          align="start"
+          sideOffset={8}
+          className="min-w-40 rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
+        >
           {NAV_LINKS.map((item) => (
-            <DropdownMenuItem key={item.href} asChild>
+            <DropdownMenuItem
+              key={item.href}
+              asChild
+              className="rounded-md p-0 focus:bg-secondary/50 focus:text-foreground data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground"
+            >
               <a
                 href={item.href}
-                className="w-full text-lg font-medium capitalize"
+                className="block w-full cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors focus-visible:outline-hidden"
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}

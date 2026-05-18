@@ -316,9 +316,9 @@ export default function ChatReplay({
       )}
     >
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
-        className="absolute -left-3 top-4 z-10 h-6 w-6 border bg-background shadow-md hover:bg-accent"
+        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? (

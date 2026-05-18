@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { PlaylistEpisodeCard } from '@/components/shows/PlaylistEpisodeCard'
 import { cn } from '@/lib/utils'
 import type { Show } from '@/lib/shows'
 import { ChevronDown, ChevronLeft, ChevronRight, ListVideo } from 'lucide-react'
@@ -23,6 +24,7 @@ export function EpisodePlaylist({
 }: EpisodePlaylistProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState(currentSeasonId)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [seasonMenuOpen, setSeasonMenuOpen] = useState(false)
 
   const selectedSeason =
     show.seasons.find((s) => s.id === selectedSeasonId) || show.seasons[0]
@@ -34,11 +36,10 @@ export function EpisodePlaylist({
         isCollapsed ? 'w-12' : 'w-80 md:w-96',
       )}
     >
-      {/* Collapse Toggle */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
-        className="absolute -left-3 top-4 z-10 h-6 w-6 border bg-background shadow-md hover:bg-accent"
+        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? (
@@ -50,77 +51,66 @@ export function EpisodePlaylist({
 
       {!isCollapsed ? (
         <>
-          {/* Header */}
-          <div className="flex flex-col gap-2 border-b p-6">
+          <div className="flex flex-col gap-3 border-b p-6">
             <h2 className="text-lg font-semibold leading-none tracking-tight">
               {show.title}
             </h2>
 
-            <DropdownMenu>
+            <DropdownMenu
+              open={seasonMenuOpen}
+              onOpenChange={setSeasonMenuOpen}
+              modal={false}
+            >
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {selectedSeason?.title}
-                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'h-9 w-full justify-between rounded-lg border px-3 shadow-none',
+                    'hover:bg-secondary/60 focus-visible:ring-1',
+                  )}
+                >
+                  <span className="truncate">{selectedSeason?.title}</span>
+                  <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
+              <DropdownMenuContent
+                align="start"
+                sideOffset={8}
+                className="min-w-(--radix-dropdown-menu-trigger-width) rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
+              >
                 {show.seasons.map((season) => (
                   <DropdownMenuItem
                     key={season.id}
                     onSelect={() => setSelectedSeasonId(season.id)}
+                    className={cn(
+                      'rounded-md p-0 focus:bg-secondary/50 focus:text-foreground',
+                      'data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground',
+                      selectedSeasonId === season.id &&
+                        'bg-secondary/40 text-foreground',
+                    )}
                   >
-                    {season.title}
+                    <span className="block w-full cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors">
+                      {season.title}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          {/* Episode List */}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-2">
-              {selectedSeason?.episodes.map((episode, index) => {
-                const isCurrent =
-                  episode.id === currentEpisodeId &&
-                  selectedSeason.id === currentSeasonId
-
-                return (
-                  <a
-                    key={episode.id}
-                    href={`/shows/${show.id}/${selectedSeason.id}/${episode.id}`}
-                    className={cn(
-                      'group flex gap-3 border p-2 text-left transition-colors hover:bg-accent/80',
-                      isCurrent
-                        ? 'border-primary/20 bg-primary/20'
-                        : 'border-primary/20',
-                    )}
-                  >
-                    <div className="relative aspect-video w-24 flex-none overflow-hidden bg-muted">
-                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary"></div>
-                      <img
-                        src={episode.thumbnailUrl}
-                        alt={episode.title}
-                        className={cn(
-                          'h-full w-full object-cover transition-all',
-                          isCurrent ? 'opacity-50' : 'group-hover:scale-105',
-                        )}
-                      />
-                      {isCurrent && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-3 w-3 rotate-45 animate-pulse bg-primary" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                      <span className="line-clamp-2 text-sm font-medium leading-tight">
-                        <span className="mr-1 font-bold">#{index + 1}</span>
-                        {episode.title}
-                      </span>
-                      <span className="text-xs">{episode.duration}</span>
-                    </div>
-                  </a>
-                )
-              })}
+              {selectedSeason?.episodes.map((episode) => (
+                <PlaylistEpisodeCard
+                  key={episode.id}
+                  episode={episode}
+                  isCurrent={
+                    episode.id === currentEpisodeId &&
+                    selectedSeason.id === currentSeasonId
+                  }
+                  href={`/shows/${show.id}/${selectedSeason.id}/${episode.id}`}
+                />
+              ))}
             </div>
           </div>
         </>

@@ -8,15 +8,17 @@ import { SITE } from '@/consts'
 type Props = {
   title: string
   description: string
-  image?: string,
+  image?: string
   className?: string
+  headerOverlay?: boolean
 }
 
-const { title, description, image, className } = Astro.props
+const { title, description, image, className, headerOverlay = false } =
+  Astro.props
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-header-overlay={headerOverlay ? '' : undefined}>
   <head>
     <Head
       title={`${title} - ${SITE.TITLE}`}
@@ -26,13 +28,16 @@ const { title, description, image, className } = Astro.props
   </head>
   <body>
     <div
-      class={cn("box-border flex h-fit min-h-screen flex-col gap-y-6 font-sans antialiased", className)}
+      class={cn(
+        'box-border flex min-h-screen flex-col font-sans antialiased',
+        className,
+      )}
     >
       <Header />
       <main transition:animate="fade" class="grow">
         <slot />
       </main>
-      <Footer />
+      {!headerOverlay && <Footer />}
     </div>
   </body>
 </html>

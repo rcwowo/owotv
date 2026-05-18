@@ -1,19 +1,77 @@
 ---
+import Container from '@/components/Container.astro'
+import Link from '@/components/Link.astro'
+import { FOOTER_LINKS, RCW_URL } from '@/consts'
+import { Icon } from 'astro-icon/components'
 import { version } from 'package.json'
-import { FOOTER_LINKS } from '@/consts'
-import SocialIcons from './SocialIcons.astro'
+
+const year = new Date().getFullYear()
+
+const getFooterHref = (href: string, label: string) =>
+  label === 'Support Email' ? `mailto:${href}` : href
+
+const isExternal = (href: string) =>
+  href.startsWith('http') || href.startsWith('mailto:')
 ---
 
-<footer class="p-4 bg-background/50 backdrop-blur-md border-t">
-  <div
-    class="flex flex-col items-center justify-center gap-y-2 sm:flex-row sm:justify-between"
+<footer class="mt-auto border-t border-border/50">
+  <Container
+    class="flex flex-col gap-10 py-14 sm:flex-row sm:items-center sm:justify-between sm:py-16"
   >
-    <div class="flex items-center">
-      <p class="text-center text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} All rights reserved.
-        <span class="opacity-50 text-xs ml-1">v{version}</span>
-      </p>
+    <div class="flex flex-col">
+      <a href="/" class="inline-flex w-fit" aria-label="owoTV home">
+        <img
+          src="/static/logo-transparent.png"
+          alt=""
+          width="84"
+          height="50"
+          class="h-11 w-auto sm:h-14"
+          loading="lazy"
+          decoding="async"
+        />
+      </a>
+
+      <div class="mt-8 flex flex-col gap-1">
+        <p class="text-sm leading-snug text-foreground">
+          an{' '}
+          <Link
+            href={RCW_URL}
+            external
+            class="font-semibold text-accent transition-colors hover:text-accent/80"
+          >
+            rcw.lol
+          </Link>{' '}
+          project
+          <span class="ml-1 text-xs text-muted-foreground">v{version}</span>
+        </p>
+        <p class="text-sm leading-snug text-foreground">
+          &copy; {year} All Rights Reserved.
+        </p>
+      </div>
     </div>
-    <SocialIcons links={FOOTER_LINKS} />
-  </div>
+
+    <ul class="flex flex-col items-start gap-2.5 sm:items-end" role="list">
+      {
+        FOOTER_LINKS.map((item) => {
+          const href = getFooterHref(item.href, item.label)
+          const external = isExternal(href)
+          return (
+            <li>
+              <Link
+                href={href}
+                external={external}
+                class="group inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+                <Icon
+                  name="lucide:external-link"
+                  class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
+                />
+              </Link>
+            </li>
+          )
+        })
+      }
+    </ul>
+  </Container>
 </footer>

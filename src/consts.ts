@@ -30,15 +30,17 @@ export const SITE: Site = {
 }
 
 export const NAV_LINKS: Link[] = [
-  { href: '/vods', label: 'VODs' },
+  { href: '/vods', label: 'Browse' },
   { href: '/shows', label: 'Shows' },
 ]
 
 export const FOOTER_LINKS: Link[] = [
-  { href: 'https://gitlab.com/rcw.lol/vods', label: 'GitLab' },
-  { href: 'riley@rcw.lol', label: 'Email' },
+  { href: 'https://gitlab.com/rcw.lol/vods', label: 'Source Code' },
+  { href: 'riley@rcw.lol', label: 'Support Email' },
   { href: '/rss.xml', label: 'RSS' },
 ]
+
+export const RCW_URL = 'https://rcw.lol'
 
 
 export const BADGES: Record<string, Badge> = {

@@ -1,0 +1,86 @@
+---
+import Link from '@/components/Link.astro'
+import { SITE } from '@/consts'
+import { cn } from '@/lib/utils'
+
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<Link
+  href="/"
+  class={cn('logo group inline-flex shrink-0 items-center', className)}
+  aria-label={SITE.TITLE}
+>
+  <span class="logo-mark relative inline-block h-5 sm:h-6">
+    <img
+      src="/static/logo-transparent.png"
+      alt=""
+      width="48"
+      height="28"
+      class="logo-face block h-full w-auto"
+      loading="eager"
+      decoding="async"
+    />
+    <span class="logo-tv" aria-hidden="true">tv</span>
+  </span>
+</Link>
+
+<style>
+  .logo-mark {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .logo-tv {
+    position: absolute;
+    right: -0.9rem;
+    top: -0.2rem;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: hsl(var(--accent));
+    pointer-events: none;
+    transform-origin: bottom left;
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      text-shadow 0.25s ease;
+  }
+
+  .logo:hover .logo-mark,
+  .logo:focus-visible .logo-mark {
+    transform: scale(1.05) rotate(5deg);
+  }
+
+  .logo:hover .logo-tv,
+  .logo:focus-visible .logo-tv {
+    transform: translateY(-1px);
+    text-shadow: 0 0 14px hsl(var(--accent) / 0.55);
+  }
+
+  .logo:active .logo-mark {
+    transform: scale(0.98) rotate(5deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-mark,
+    .logo-tv {
+      transition: none;
+    }
+
+    .logo:hover .logo-mark,
+    .logo:focus-visible .logo-mark {
+      transform: none;
+    }
+
+    .logo:hover .logo-tv,
+    .logo:focus-visible .logo-tv {
+      transform: none;
+      text-shadow: none;
+    }
+  }
+</style>

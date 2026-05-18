@@ -1,57 +1,60 @@
 ---
 import type { CollectionEntry } from 'astro:content'
 import { Icon } from 'astro-icon/components'
+import { formatStreamDate } from '@/lib/date'
 
 interface Props {
   vod: CollectionEntry<'vods'>
 }
 
-const { vod} = Astro.props
+const { vod } = Astro.props
 ---
 
 <div class="relative aspect-video">
   <a
     href={`/watch/${vod.id}`}
-    class="group relative block h-full w-full overflow-hidden border bg-card"
+    class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   >
-  <div class="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary"></div>
-  <div class="absolute inset-x-0 top-0 z-30 h-0.5 bg-linear-to-r from-primary to-accent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
-
     <img
       src={vod.data['Thumbnail URL']}
       alt={vod.data['Title']}
       loading="lazy"
-      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+      class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
     />
 
-    <div class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-      <div class="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/30"></div>
+    <div
+      class="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+    >
     </div>
 
-    <div class="absolute left-0 right-0 top-0 z-30 p-2">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-xs border border-white/10">
-          {vod.data['Stream Date'].toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-          })}
-        </span>
-        <span class="bg-black/45 px-2 py-1 text-xs text-white backdrop-blur-xs border border-white/10 flex items-center gap-1">
-          <Icon name="lucide:clock" />
-          {vod.data['Duration']}
-        </span>
-      </div>
+    <div class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2">
+      <span
+        class="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+      >
+        {formatStreamDate(vod.data['Stream Date'])}
+      </span>
+      <span
+        class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+      >
+        <Icon name="lucide:clock" class="size-3 shrink-0 opacity-80" />
+        {vod.data['Duration']}
+      </span>
     </div>
 
-    <div class='absolute bottom-0 left-0 right-0 z-20 bg-linear-to-t from-black/70 to-transparent transition-transform duration-500'>
-      <div class="border-t border-white/10 bg-black/50 backdrop-blur-xs px-3 py-2">
-        <h3 class='truncate text-lg font-semibold text-white'>
-          {vod.data['Title']}
-        </h3>
-      </div>
+    <div
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+    >
+      <p class="text-xs font-medium leading-tight text-white line-clamp-2">
+        {vod.data['Title']}
+      </p>
+      <p class="truncate text-[11px] leading-tight text-white/65">
+        {vod.data['Game']}
+      </p>
     </div>
 
-    <div class="pointer-events-none absolute left-[-30%] top-0 z-40 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"></div>
+    <div
+      class="pointer-events-none absolute left-[-30%] top-0 z-10 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"
+    >
+    </div>
   </a>
 </div>

@@ -1,58 +1,159 @@
 ---
+import Container from '@/components/Container.astro'
 import Link from '@/components/Link.astro'
+import Logo from '@/components/Logo.astro'
+import SiteSearch from '@/components/SiteSearch.astro'
 import MobileMenu from '@/components/ui/mobile-menu'
-import { ModeToggle } from '@/components/ui/mode-toggle'
-import { NAV_LINKS, SITE } from '@/consts'
-import { Image } from 'astro:assets'
-import logo from '../../public/static/logo.webp'
-import { buttonVariants } from '@/components/ui/button'
-import { Icon } from 'astro-icon/components'
-import { cn } from '@/lib/utils'
+import { NAV_LINKS } from '@/consts'
+
 ---
 
 <header
-  class="sticky top-0 z-10 bg-background/50 backdrop-blur-md border-b"
-  transition:persist
+  class="site-header top-0 z-50 w-full border-b border-border/40 bg-background/75 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
+  transition:persist="site-header"
+  transition:animate="none"
 >
-  <!-- Header Bar  -->
-  <div class="px-4">
-    <div class="flex flex-wrap items-center justify-between gap-4 py-2">
-      <!-- Left Side -->
-      <span class="flex flex-row items-center gap-2">
-        <MobileMenu client:load transition:persist />
-        <Link
-          href="/"
-          class="flex shrink-0 items-center p-2 gap-2 text-xl font-semibold transition-colors duration-300 group hover:bg-secondary/50"
-        >
-          <Image src={logo} alt="Logo" class="size-8 transition-transform group-hover:scale-110 group-hover:rotate-6 group-active:scale-100" loading={"eager"} />
-          {SITE.TITLE}
-        </Link>
-        <nav class="hidden items-center gap-4 text-sm md:flex">
-            {
-              NAV_LINKS.map((item) => (
-                <Link
-                  href={item.href}
-                  class="capitalize text-foreground/60 transition-colors hover:text-foreground/80"
-                >
-                  {item.label}
-                </Link>
-              ))
-            }
-        </nav>
-      </span>
-      <!-- Right Side -->
-      <div class="flex items-center gap-2 md:gap-4">
-        <Link
-          href="/search"
-          class={cn(buttonVariants({ variant: 'outline' }), 'flex gap-2')}
-        >
-          <Icon name="lucide:search" class='size-4' />
-          <span class="hidden md:inline">
-            Search...
-          </span>
-        </Link>
-        <ModeToggle client:load transition:persist />
+  <Container>
+    <nav class="header-nav flex h-14 items-center justify-between gap-4">
+      <div class="header-nav-left flex min-w-0 items-center gap-6">
+        <MobileMenu client:load />
+
+        <Logo class="header-logo" />
+
+        <div class="hidden items-center gap-1 sm:flex">
+          {
+            NAV_LINKS.map((item) => (
+              <Link
+                href={item.href}
+                data-nav-link
+                class="nav-link rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-secondary/50 hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))
+          }
+        </div>
       </div>
-    </div>
-  </div>
+
+      <div class="header-nav-right flex items-center gap-2 sm:gap-3">
+        <SiteSearch />
+      </div>
+    </nav>
+  </Container>
 </header>
+
+<style>
+  .site-header {
+    position: sticky;
+  }
+
+  @media (width < 40rem) {
+    .header-nav {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+    }
+
+    .header-nav-left {
+      display: contents;
+    }
+
+    .header-nav-right {
+      grid-column: 3;
+      justify-self: end;
+    }
+
+    :global(.header-menu-trigger) {
+      grid-column: 1;
+      justify-self: start;
+    }
+
+    .header-logo {
+      grid-column: 2;
+      justify-self: center;
+    }
+  }
+
+  :global(html[data-header-overlay]) .site-header {
+    position: fixed;
+    border-color: hsl(var(--border) / 0.35);
+    background-color: hsl(var(--background) / 0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  :global(html[data-header-overlay]) .nav-link {
+    color: hsl(var(--foreground) / 0.82);
+  }
+
+  :global(html[data-header-overlay]) .nav-link:hover {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.55);
+  }
+
+  :global(.header-menu-trigger) {
+    border-style: solid;
+    border-width: 1px;
+    border-color: hsl(var(--border) / 0.6);
+    background-color: hsl(var(--secondary) / 0.4);
+    color: hsl(var(--muted-foreground));
+  }
+
+  :global(.header-menu-trigger:hover),
+  :global(.header-menu-trigger[data-state='open']) {
+    background-color: hsl(var(--secondary) / 0.6);
+    color: hsl(var(--foreground));
+  }
+
+  :global(html[data-header-overlay] .site-search-mobile-trigger) {
+    border-color: hsl(var(--border) / 0.5);
+    background-color: hsl(var(--secondary) / 0.45);
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  :global(html[data-header-overlay] .site-search-mobile-trigger:hover) {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.6);
+  }
+
+  :global(html[data-header-overlay] .header-menu-trigger) {
+    border-color: hsl(var(--border) / 0.5);
+    background-color: hsl(var(--secondary) / 0.45);
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  :global(html[data-header-overlay] .header-menu-trigger:hover) {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.6);
+  }
+
+  :global([data-nav-link].is-active) {
+    background-color: hsl(var(--secondary) / 0.8);
+    color: hsl(var(--foreground));
+  }
+
+  :global([data-nav-link].is-active:hover) {
+    background-color: hsl(var(--secondary) / 0.8);
+    color: hsl(var(--foreground));
+  }
+
+  :global(html[data-header-overlay] [data-nav-link].is-active) {
+    background-color: hsl(var(--secondary) / 0.65);
+    color: hsl(var(--foreground));
+  }
+</style>
+
+<script is:inline>
+  function updateHeaderNav() {
+    const path = window.location.pathname
+    document.querySelectorAll('[data-nav-link]').forEach((link) => {
+      const href = link.getAttribute('href')
+      if (!href) return
+      const active = path === href || path.startsWith(`${href}/`)
+      link.classList.toggle('is-active', active)
+    })
+  }
+
+  document.addEventListener('astro:after-swap', updateHeaderNav)
+  document.addEventListener('astro:page-load', updateHeaderNav)
+</script>

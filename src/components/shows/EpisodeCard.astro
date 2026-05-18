@@ -1,0 +1,63 @@
+---
+import type { Episode } from '@/lib/shows'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  episode: Episode
+  href: string
+}
+
+const { episode, href } = Astro.props
+---
+
+<a
+  href={href}
+  class="group focus-visible:ring-ring focus-visible:ring-offset-background flex flex-col gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+>
+  <div
+    class="border-border/60 bg-card relative aspect-video overflow-hidden rounded-xl border"
+  >
+    <img
+      src={episode.thumbnailUrl}
+      alt={episode.title}
+      loading="lazy"
+      class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+    />
+
+    <span
+      class="absolute right-2 bottom-2 z-20 rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+    >
+      {episode.duration}
+    </span>
+
+    <div
+      class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
+    >
+      <div
+        class="bg-primary/90 text-primary-foreground scale-90 rounded-full p-2.5 opacity-0 shadow-lg transition-[opacity,transform] duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"
+      >
+        <Icon name="lucide:play" class="size-6 fill-current" />
+      </div>
+    </div>
+
+    <div
+      class="pointer-events-none absolute top-0 left-[-30%] z-10 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"
+    >
+    </div>
+  </div>
+
+  <div class="space-y-1 px-0.5">
+    <h3
+      class="group-hover:text-primary line-clamp-2 leading-tight font-medium transition-colors"
+    >
+      {episode.title}
+    </h3>
+    <p class="text-muted-foreground text-xs">
+      {
+        episode.airDate.toLocaleDateString(undefined, {
+          dateStyle: 'medium',
+        })
+      }
+    </p>
+  </div>
+</a>

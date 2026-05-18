@@ -1,13 +1,14 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(class, class *));
-
 @theme {
   --font-sans:
-    Geist, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    Outfit, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-display:
+    Syne, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono:
-    Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     'Liberation Mono', 'Courier New', monospace;
 
   --color-background: hsl(var(--background));
@@ -82,78 +83,41 @@
 
 @layer utilities {
   @font-face {
-    font-family: 'Geist';
-    src: url('/fonts/GeistVF.woff2') format('woff2');
+    font-family: 'Roboto Mono';
+    src: url('/fonts/RobotoMonoVF.ttf') format('truetype');
     font-weight: 100 900;
     font-style: normal;
     font-display: swap;
   }
 
-  @font-face {
-    font-family: 'Geist Mono';
-    src: url('/fonts/GeistMonoVF.woff2') format('woff2');
-    font-weight: 100 900;
-    font-style: normal;
-    font-display: swap;
+  .font-display {
+    font-family: var(--font-display);
   }
 }
 
 @layer base {
   :root {
-    --background: 250 40% 98%;
-    --foreground: 252 36% 10%;
-    --card: 0 0% 100%;
+    --background: 250 15% 4%;
+    --foreground: 45 10% 90%;
+    --card: 250 12% 7%;
     --card-foreground: var(--foreground);
-    --popover: 0 0% 100%;
+    --popover: 250 12% 6%;
     --popover-foreground: var(--foreground);
-    --primary: 262 83% 54%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 260 20% 96%;
-    --secondary-foreground: 252 36% 20%;
-    --muted: 260 12% 92%;
-    --muted-foreground: 252 10% 38%;
-    --accent: 292 76% 50%;
-    --accent-foreground: 0 0% 100%;
-    --additive: 160 84% 39%;
-    --additive-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 260 16% 86%;
-    --input: 260 16% 86%;
-    --ring: 262 83% 54%;
-
-    /* Light mode gradient stops */
-    --gradient-1: var(--primary);
-    --gradient-2: var(--accent);
-    --gradient-3: var(--additive);
-  }
-  .dark {
-    --background: 248 24% 10%;
-    --foreground: 0 0% 98%;
-    --card: 248 22% 14%;
-    --card-foreground: var(--foreground);
-    --popover: 248 22% 12%;
-    --popover-foreground: var(--foreground);
-    --primary: 262 83% 65%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 248 22% 18%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 248 10% 22%;
-    --muted-foreground: 248 5% 65%;
-    --accent: 292 76% 55%;
-    --accent-foreground: 0 0% 100%;
-    --additive: 160 84% 40%;
-    --additive-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 50.6%;
+    --primary: 45 10% 85%;
+    --primary-foreground: 250 15% 6%;
+    --secondary: 250 10% 9%;
+    --secondary-foreground: 45 10% 90%;
+    --muted: 250 10% 12%;
+    --muted-foreground: 250 5% 50%;
+    --accent: 330 80% 65%;
+    --accent-foreground: 45 10% 95%;
+    --additive: 152 56% 40%;
+    --additive-foreground: 0 0% 9%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 248 12% 24%;
-    --input: 248 12% 24%;
-    --ring: 262 83% 65%;
-
-    /* Dark mode gradient stops */
-    --gradient-1: var(--primary);
-    --gradient-2: var(--accent);
-    --gradient-3: var(--additive);
+    --border: 250 10% 11%;
+    --input: 250 10% 14%;
+    --ring: 330 80% 65%;
   }
 
   *,
@@ -163,21 +127,12 @@
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
     @apply bg-background text-foreground;
-
-    &.dark {
-      color-scheme: dark;
-    }
 
     ::-webkit-scrollbar-corner {
       @apply bg-transparent;
     }
-  }
-
-  .disable-transitions,
-  .disable-transitions * {
-    @apply transition-none!;
   }
 }
 
@@ -185,17 +140,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(60% 60% at 20% 0%, hsl(var(--gradient-1)/0.20) 0%, transparent 60%),
-      radial-gradient(40% 40% at 85% 10%, hsl(var(--gradient-2)/0.16) 0%, transparent 58%),
-      radial-gradient(50% 50% at 50% 100%, hsl(var(--gradient-3)/0.12) 0%, transparent 60%);
-    background-attachment: fixed;
-    background-repeat: no-repeat;
   }
 
   ::selection {
-    background-color: hsl(var(--primary)/0.25);
+    background-color: hsl(var(--accent) / 0.25);
   }
 }
