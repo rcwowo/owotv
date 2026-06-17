@@ -8,6 +8,7 @@ import { getYouTubeVideoID } from '@/lib/utils'
 import { getYouTubePlayerElementId } from '@/lib/youtube-api'
 import { Icon } from 'astro-icon/components'
 import { getCollection, type CollectionEntry } from 'astro:content'
+import { cn } from '@/lib/utils'
 
 export async function getStaticPaths() {
   const vods: CollectionEntry<'vods'>[] = await getCollection('vods')
@@ -43,7 +44,7 @@ const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
     <div class="flex items-center justify-between border-b p-4">
       <div class="flex items-center gap-2">
         <button
-          class={buttonVariants({ variant: 'outline', size: 'sm' })}
+          class={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'cursor-pointer')}
           onclick="(function(){try{if(window.history.length>1){window.history.back()}else{window.location.href='/'}}catch(e){window.location.href='/'}})()"
         >
           <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />

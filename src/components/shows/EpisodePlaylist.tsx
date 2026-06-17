@@ -39,7 +39,7 @@ export function EpisodePlaylist({
       <Button
         variant="outline"
         size="icon"
-        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm"
+        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm cursor-pointer"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? (
