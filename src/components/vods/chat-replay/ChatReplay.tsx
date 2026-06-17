@@ -1,62 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Badge } from './Badge'
-import { ChatMessage } from './ChatMessage'
+import { useWatchPlayerTime } from '@/hooks/useWatchPlayerTime'
 import { SITE } from '@/consts'
 import type {
   ChatComment,
   ChatData,
   ChatReplayProps,
-  YouTubePlayer,
-  YouTubeEvent,
   SevenTvObject,
   SevenTvEmoteSet,
 } from './types'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
-
-declare global {
-  interface Window {
-    YT: {
-      Player: new (
-        elementId: string,
-        config: {
-          videoId: string
-          playerVars?: Record<string, any>
-          events?: Record<string, (event: YouTubeEvent) => void>
-        },
-      ) => YouTubePlayer
-    }
-    onYouTubeIframeAPIReady?: () => void
-  }
-}
+import { useEffect, useRef, useState } from 'react'
+import { Badge } from './Badge'
+import { ChatMessage } from './ChatMessage'
 
 export default function ChatReplay({
   chatReplayURL,
-  youtubeId,
 }: ChatReplayProps) {
   const [comments, setComments] = useState<ChatComment[]>([])
   const [visibleComments, setVisibleComments] = useState<ChatComment[]>([])
-  const [currentTime, setCurrentTime] = useState(0)
+  const currentTime = useWatchPlayerTime()
   const [userScrolled, setUserScrolled] = useState(false)
   const [emoteData, setEmoteData] = useState<
     Record<string, { type: 'twitch' | '7tv'; id: string }>
   >({})
   const [isCollapsed, setIsCollapsed] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<YouTubePlayer | null>(null)
   const MAX_VISIBLE_MESSAGES = 200
 
-  // Load chat messages and process emotes
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        console.log('[ChatReplay] Fetching comments from:', chatReplayURL)
         const response = await fetch(chatReplayURL)
         const data: ChatData = await response.json()
-        console.log('[ChatReplay] Fetched', data.comments.length, 'comments')
 
-        // Process emotes from all comments
         const emoteMap: Record<string, { type: 'twitch' | '7tv'; id: string }> =
           {}
         data.comments.forEach((comment) => {
@@ -70,7 +47,6 @@ export default function ChatReplay({
           })
         })
 
-        // Fetch 7TV emotes
         try {
           const sevenTvResponse = await fetch('https://7tv.io/v4/gql', {
             method: 'POST',
@@ -113,13 +89,7 @@ export default function ChatReplay({
               sevenTvData.data.users.userByConnection.emoteSets.find(
                 (obj) => obj.id === activeEmoteSetId,
               )
-            console.log('[ChatReplay] Active emote set:', activeEmoteSet)
-            console.log(
-              '[ChatReplay] Fetched 7TV emotes:',
-              activeEmoteSet?.emotes?.items?.length || 0,
-            )
 
-            // Add 7TV emotes to the emote map
             if (activeEmoteSet) {
               activeEmoteSet.emotes?.items?.forEach(
                 (emote: { id: string; alias: string }) => {
@@ -129,15 +99,7 @@ export default function ChatReplay({
                   }
                 },
               )
-            } else {
-              console.error(
-                '[ChatReplay] Active emote set not found, skipping 7TV emotes',
-              )
             }
-          } else {
-            console.error(
-              '[ChatReplay] Active emote set not found, skipping 7TV emotes',
-            )
           }
         } catch (error) {
           console.error('[ChatReplay] Error fetching 7TV emotes:', error)
@@ -155,156 +117,23 @@ export default function ChatReplay({
     }
     fetchComments()
   }, [chatReplayURL])
-  // Initialize YouTube Player API
+
   useEffect(() => {
-    if (!youtubeId) return
-
-    let attempts = 0
-    const maxAttempts = 10
-    const retryInterval = 1000 // 1 second
-
-    const iframeId = `youtube-player-${youtubeId}`
-    console.log('[ChatReplay] Looking for iframe:', iframeId)
-
-    const initPlayer = () => {
-      const iframe = document.getElementById(iframeId)
-      if (!iframe) {
-        console.error('[ChatReplay] Iframe not found:', iframeId)
-        return false
-      }
-      console.log('[ChatReplay] Found iframe, initializing player')
-
-      try {
-        if (!window.YT || !window.YT.Player) {
-          console.log('[ChatReplay] YouTube API not ready yet')
-          return false
-        }
-
-        console.log('[ChatReplay] Initializing player')
-
-        // Destroy existing player if it exists
-        if (playerRef.current) {
-          playerRef.current.destroy()
-        }
-
-        // Create new player
-        playerRef.current = new window.YT.Player(iframeId, {
-          videoId: youtubeId,
-          playerVars: {
-            autoplay: 1,
-            playsinline: 1,
-            rel: 0,
-            origin: window.location.origin,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: (event: YouTubeEvent) => {
-              console.log('[ChatReplay] Player ready', event)
-            },
-            onStateChange: (event: YouTubeEvent) => {
-              console.log('[ChatReplay] Player state changed:', event.data)
-              if (event.data === 1) {
-                // Playing
-                const updateTime = () => {
-                  if (playerRef.current) {
-                    try {
-                      const time = playerRef.current.getCurrentTime()
-                      setCurrentTime(time)
-                      if (event.data === 1) {
-                        // Only continue if still playing
-                        requestAnimationFrame(updateTime)
-                      }
-                    } catch (error) {
-                      console.error('[ChatReplay] Error getting time:', error)
-                    }
-                  }
-                }
-                updateTime()
-              }
-            },
-            onError: (event: any) => {
-              console.error('[ChatReplay] Player error:', event.data)
-            },
-          },
-        })
-        return true
-      } catch (error) {
-        console.error('[ChatReplay] Error initializing player:', error)
-        return false
-      }
-    }
-
-    const loadYouTubeAPI = () => {
-      return new Promise<void>((resolve) => {
-        if (window.YT && window.YT.Player) {
-          console.log('[ChatReplay] YouTube API already loaded')
-          resolve()
-          return
-        }
-
-        console.log('[ChatReplay] Loading YouTube API script')
-        const tag = document.createElement('script')
-        tag.src = 'https://www.youtube.com/iframe_api'
-        const firstScriptTag = document.getElementsByTagName('script')[0]
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
-
-        window.onYouTubeIframeAPIReady = () => {
-          console.log('[ChatReplay] YouTube API script loaded')
-          resolve()
-        }
-      })
-    }
-
-    const attemptInitialization = async () => {
-      if (attempts >= maxAttempts) {
-        console.error('[ChatReplay] Max initialization attempts reached')
-        return
-      }
-
-      attempts++
-      console.log(
-        `[ChatReplay] Initialization attempt ${attempts}/${maxAttempts}`,
-      )
-
-      await loadYouTubeAPI()
-
-      if (!initPlayer()) {
-        console.log('[ChatReplay] Initialization failed, retrying...')
-        setTimeout(attemptInitialization, retryInterval)
-      }
-    }
-
-    attemptInitialization()
-
-    return () => {
-      if (playerRef.current) {
-        console.log('[ChatReplay] Cleaning up player')
-        playerRef.current.destroy()
-      }
-    }
-  }, [youtubeId])
-
-  // Update visible messages based on current time
-  useEffect(() => {
-    const visibleComments = comments
+    const visible = comments
       .filter((comment) => comment.content_offset_seconds <= currentTime)
       .slice(-MAX_VISIBLE_MESSAGES)
-    setVisibleComments(visibleComments)
+    setVisibleComments(visible)
 
-    // Auto-scroll to bottom only if user hasn't scrolled up
     if (chatContainerRef.current && !userScrolled) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [currentTime, comments, userScrolled])
 
-  // Handle scroll events
   const handleScroll = () => {
     if (!chatContainerRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 20
-
-    // Update userScrolled state based on scroll position
     setUserScrolled(!isAtBottom)
   }
 
@@ -339,6 +168,7 @@ export default function ChatReplay({
                   if (chatContainerRef.current) {
                     chatContainerRef.current.scrollTop =
                       chatContainerRef.current.scrollHeight
+                    setUserScrolled(false)
                   }
                 }}
               >
