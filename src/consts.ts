@@ -25,7 +25,7 @@ export const SITE: Site = {
     'A fully featured archive of my past livestreams. Complete with chat replay and other features.',
   EMAIL: 'riley@rcw.lol',
   VODS_PER_PAGE: 21,
-  SITEURL: 'https://owo.rcw.lol',
+  SITEURL: 'https://tv.rcw.lol',
   TWITCH_USER_ID: 194814599
 }
 
@@ -35,7 +35,7 @@ export const NAV_LINKS: Link[] = [
 ]
 
 export const FOOTER_LINKS: Link[] = [
-  { href: 'https://gitlab.com/rcw.lol/vods', label: 'Source Code' },
+  { href: 'https://github.com/rcwowo/owotv', label: 'Source Code' },
   { href: 'riley@rcw.lol', label: 'Support Email' },
   { href: '/rss.xml', label: 'RSS' },
 ]

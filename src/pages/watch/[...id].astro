@@ -21,14 +21,15 @@ export async function getStaticPaths() {
 const { vod } = Astro.props
 const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
 
-const { GITLAB_REPO_USERNAME, GITLAB_REPO_NAME } = import.meta.env
+const { S3_BASE_URL } = import.meta.env
 const chatLogPath = vod.data['Chat Replay Path']
 let chatReplayUrl: string | undefined
 
-if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
-  const projectId = encodeURIComponent(`${GITLAB_REPO_USERNAME}/${GITLAB_REPO_NAME}`)
-  const filePath = encodeURIComponent(chatLogPath)
-  chatReplayUrl = `https://gitlab.com/api/v4/projects/${projectId}/repository/files/${filePath}/raw?ref=master`
+if (chatLogPath && S3_BASE_URL) {
+  chatReplayUrl = new URL(
+    chatLogPath.replace(/^\//, ''),
+    S3_BASE_URL.endsWith('/') ? S3_BASE_URL : `${S3_BASE_URL}/`,
+  ).href
 }
 
 const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''

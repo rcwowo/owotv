@@ -3,8 +3,7 @@
 
 interface ImportMetaEnv {
   readonly BASEROW_DB_TOKEN: string;
-  readonly GITLAB_REPO_USERNAME: string;
-  readonly GITLAB_REPO_NAME: string;
+  readonly S3_BASE_URL: string;
 }
 
 interface ImportMeta {
