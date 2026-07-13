@@ -34,12 +34,13 @@ export interface ChatData {
 
 export interface ChatReplayProps {
   chatReplayURL: string
-  youtubeId: string | undefined
 }
 
 export interface YouTubePlayer {
   getCurrentTime(): number
   getPlayerState(): number
+  seekTo(seconds: number, allowSeekAhead: boolean): void
+  playVideo(): void
   destroy(): void
 }
 

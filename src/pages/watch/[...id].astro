@@ -1,10 +1,14 @@
 ---
 import ChatReplay from '@/components/vods/chat-replay/ChatReplay'
+import WatchShareButton from '@/components/vods/WatchShareButton'
+import YouTubeWatchPlayer from '@/components/vods/YouTubeWatchPlayer'
 import { buttonVariants } from '@/components/ui/button'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubeVideoID } from '@/lib/utils'
+import { getYouTubePlayerElementId } from '@/lib/youtube-api'
 import { Icon } from 'astro-icon/components'
 import { getCollection, type CollectionEntry } from 'astro:content'
+import { cn } from '@/lib/utils'
 
 export async function getStaticPaths() {
   const vods: CollectionEntry<'vods'>[] = await getCollection('vods')
@@ -17,15 +21,18 @@ export async function getStaticPaths() {
 const { vod } = Astro.props
 const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
 
-const { GITLAB_REPO_USERNAME, GITLAB_REPO_NAME } = import.meta.env
+const { S3_BASE_URL } = import.meta.env
 const chatLogPath = vod.data['Chat Replay Path']
 let chatReplayUrl: string | undefined
 
-if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
-  const projectId = encodeURIComponent(`${GITLAB_REPO_USERNAME}/${GITLAB_REPO_NAME}`)
-  const filePath = encodeURIComponent(chatLogPath)
-  chatReplayUrl = `https://gitlab.com/api/v4/projects/${projectId}/repository/files/${filePath}/raw?ref=master`
+if (chatLogPath && S3_BASE_URL) {
+  chatReplayUrl = new URL(
+    chatLogPath.replace(/^\//, ''),
+    S3_BASE_URL.endsWith('/') ? S3_BASE_URL : `${S3_BASE_URL}/`,
+  ).href
 }
+
+const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
 ---
 
 <MinimalLayout
@@ -36,13 +43,16 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
   <main class="flex h-screen flex-col bg-background">
     <!-- Top Navigation Bar -->
     <div class="flex items-center justify-between border-b p-4">
-      <button
-        class={buttonVariants({ variant: 'outline', size: 'sm' })}
-        onclick="(function(){try{if(window.history.length>1){window.history.back()}else{window.location.href='/'}}catch(e){window.location.href='/'}})()"
-      >
-        <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
-        <span class="hidden md:inline">Go Back</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          class={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'cursor-pointer')}
+          onclick="(function(){try{if(window.history.length>1){window.history.back()}else{window.location.href='/'}}catch(e){window.location.href='/'}})()"
+        >
+          <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
+          <span class="hidden md:inline">Go Back</span>
+        </button>
+        <WatchShareButton client:load />
+      </div>
       <div class="flex items-center gap-4 text-right">
         <div class="max-w-[70vw]">
           <h1 class="truncate text-sm font-semibold">{vod.data['Title']}</h1>
@@ -72,18 +82,14 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
       <div class="relative flex flex-1 flex-col bg-black">
         <div class="relative h-full w-full">
           {
-            chatReplayUrl ? (
-              <div
-                id={`youtube-player-${youtubeId}`}
-                class="absolute left-0 top-0 h-full w-full"
-              />
-            ) : (
-              <iframe
-                class="absolute left-0 top-0 h-full w-full"
-                src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&origin=${Astro.url.origin}&autoplay=1`}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowfullscreen
-              ></iframe>
+            youtubeId && (
+              <>
+                <div
+                  id={playerElementId}
+                  class="absolute left-0 top-0 h-full w-full"
+                />
+                <YouTubeWatchPlayer client:load youtubeId={youtubeId} />
+              </>
             )
           }
         </div>
@@ -92,11 +98,7 @@ if (chatLogPath && GITLAB_REPO_USERNAME && GITLAB_REPO_NAME) {
       <!-- Chat Replay -->
       {
         chatReplayUrl && (
-          <ChatReplay
-            client:load
-            chatReplayURL={chatReplayUrl}
-            youtubeId={youtubeId}
-          />
+          <ChatReplay client:load chatReplayURL={chatReplayUrl} />
         )
       }
     </div>
