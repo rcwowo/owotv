@@ -18,7 +18,7 @@ This project uses a combination of:
 
 - A [Baserow](https://baserow.io) instance, which handles the database and webhook automations to deploy the site.
 - A public S3 bucket that stores the chatlogs.
-- The [Chatlogs CLI](https://github.com/rcwowo/chatlogs), which does the heavy lifting of adding database entries, downloading and uploading chatlogs, and hitting those webhooks.
+- The [owoTV CLI](https://github.com/rcwowo/owotv-cli), which does the heavy lifting of adding database entries, downloading and uploading chatlogs, and hitting those webhooks.
 
 This allows the site to remain static so it can be super fast and responsive to use, still be easily updated and maintained, and most importantly, be *technically* completely free to host!
 
