@@ -1,10 +1,10 @@
 ---
-import type { CollectionEntry } from 'astro:content'
+import type { Vod } from '@/lib/db'
 import { Icon } from 'astro-icon/components'
 import { formatStreamDate } from '@/lib/date'
 
 interface Props {
-  vod: CollectionEntry<'vods'>
+  vod: Vod
 }
 
 const { vod } = Astro.props
@@ -16,8 +16,8 @@ const { vod } = Astro.props
     class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   >
     <img
-      src={vod.data['Thumbnail URL']}
-      alt={vod.data['Title']}
+      src={vod.thumbnailUrl}
+      alt={vod.title}
       loading="lazy"
       class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
     />
@@ -31,13 +31,13 @@ const { vod } = Astro.props
       <span
         class="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
       >
-        {formatStreamDate(vod.data['Stream Date'])}
+        {formatStreamDate(vod.streamDate)}
       </span>
       <span
         class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
       >
         <Icon name="lucide:clock" class="size-3 shrink-0 opacity-80" />
-        {vod.data['Duration']}
+        {vod.duration}
       </span>
     </div>
 
@@ -45,10 +45,10 @@ const { vod } = Astro.props
       class="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
     >
       <p class="text-xs font-medium leading-tight text-white line-clamp-2">
-        {vod.data['Title']}
+        {vod.title}
       </p>
       <p class="truncate text-[11px] leading-tight text-white/65">
-        {vod.data['Game']}
+        {vod.game}
       </p>
     </div>
 

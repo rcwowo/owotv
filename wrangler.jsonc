@@ -1,0 +1,13 @@
+{
+  "name": "owotv",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "owotv",
+      "database_id": "placeholder-run-wrangler-d1-create",
+      "migrations_dir": "migration"
+    }
+  ]
+}

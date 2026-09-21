@@ -2,42 +2,32 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import Layout from '@/layouts/Layout.astro'
 import VodCard from '@/components/vods/VodCard.astro'
-import { getCollection } from 'astro:content'
+import { getDb, getVods } from '@/lib/db'
 
-export async function getStaticPaths() {
-  const vods = await getCollection('vods')
-  const sortedVods = vods.sort(
-    (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-  )
+const db = getDb()
+const sortedVods = (await getVods(db)).sort(
+  (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
+)
 
-  // Get unique month-years
-  const monthYears = [
-    ...new Set(
-      sortedVods.map((vod) =>
-        vod.data['Stream Date'].toLocaleString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        }),
-      ),
-    ),
-  ]
-
-  return monthYears.map((monthYear) => {
-    const monthVods = sortedVods.filter(
-      (vod) =>
-        vod.data['Stream Date'].toLocaleString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        }) === monthYear,
-    )
-    return {
-      params: { monthYear: monthYear.toLowerCase().replace(' ', '-') },
-      props: { monthYear, vods: monthVods },
-    }
+const formatMonthYear = (date: Date) =>
+  date.toLocaleString('en-US', {
+    month: 'long',
+    year: 'numeric',
   })
-}
 
-const { monthYear, vods } = Astro.props
+const monthYears = [...new Set(sortedVods.map((vod) => formatMonthYear(vod.streamDate)))]
+
+const findMonthVods = (monthYear: string) =>
+  sortedVods.filter((vod) => formatMonthYear(vod.streamDate) === monthYear)
+
+const entry = monthYears.find(
+  (monthYear) => monthYear.toLowerCase().replace(' ', '-') === Astro.params.monthYear,
+)
+
+if (!entry) return Astro.rewrite('/404')
+
+const monthYear = entry
+const vods = findMonthVods(monthYear)
 ---
 
 <Layout title={`${monthYear} VODs`} description={`Archive of Twitch streams from ${monthYear}`}>

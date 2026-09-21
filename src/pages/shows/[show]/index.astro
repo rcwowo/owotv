@@ -2,33 +2,32 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import EpisodeCard from '@/components/shows/EpisodeCard.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getShows } from '@/lib/shows'
+import { getShow } from '@/lib/shows'
+import { getDb } from '@/lib/db'
 import { Icon } from 'astro-icon/components'
 
-export async function getStaticPaths() {
-  const shows = await getShows()
-  return shows.map((show) => ({
-    params: { showId: show.id },
-    props: { show },
-  }))
-}
+const db = getDb()
+const showSlug = Astro.params.show
+const show =
+  showSlug !== undefined ? await getShow(db, showSlug) : null
 
-const { show } = Astro.props
+if (!show) {
+  return Astro.rewrite('/404')
+}
 ---
 
-<Layout title={show.title} description={show.description}>
+<Layout title={show.name} description={show.description}>
   <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
     <div class="py-4">
       <Breadcrumbs
-        items={[{ label: 'Shows', href: '/shows' }, { label: show.title }]}
+        items={[{ label: 'Shows', href: '/shows' }, { label: show.name }]}
       />
     </div>
-    {/* Hero Section */}
     <div class="relative mt-4 h-[40vh] min-h-[400px] w-full">
       <div class="absolute inset-0">
         <img
           src={show.coverUrl}
-          alt={show.title}
+          alt={show.name}
           class="h-full w-full object-cover opacity-20 blur-md"
         />
       </div>
@@ -37,11 +36,11 @@ const { show } = Astro.props
         <div class="flex flex-col justify-center items-center text-center h-full space-y-1 p-8 z-10">
             <img
               src={show.logoUrl}
-              alt={show.title}
+              alt={show.name}
               class="h-40 object-contain mb-6"
             />
           <h1 class="text-4xl font-bold tracking-tight md:text-5xl">
-            {show.title}
+            {show.name}
           </h1>
           <p class="max-w-2xl text-lg text-muted-foreground">
             {show.description}
@@ -55,7 +54,6 @@ const { show } = Astro.props
         </div>
       </div>
     </div>
-    {/* Episodes Section */}
     <div class="container py-12">
       <div class="space-y-12">
         {
@@ -68,7 +66,7 @@ const { show } = Astro.props
                 {season.episodes.map((episode) => (
                   <EpisodeCard
                     episode={episode}
-                    href={`/shows/${show.id}/${season.id}/${episode.id}`}
+                    href={`/shows/${show.slug}/${season.id}/${episode.id}`}
                   />
                 ))}
               </div>

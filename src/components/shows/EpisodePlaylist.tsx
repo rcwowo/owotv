@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { PlaylistEpisodeCard } from '@/components/shows/PlaylistEpisodeCard'
 import { cn } from '@/lib/utils'
-import type { Show } from '@/lib/shows'
+import type { ShowWithSeasons as Show } from '@/lib/shows'
 import { ChevronDown, ChevronLeft, ChevronRight, ListVideo } from 'lucide-react'
 import { useState } from 'react'
 
@@ -53,7 +53,7 @@ export function EpisodePlaylist({
         <>
           <div className="flex flex-col gap-3 border-b p-6">
             <h2 className="text-lg font-semibold leading-none tracking-tight">
-              {show.title}
+              {show.name}
             </h2>
 
             <DropdownMenu
@@ -108,7 +108,7 @@ export function EpisodePlaylist({
                     episode.id === currentEpisodeId &&
                     selectedSeason.id === currentSeasonId
                   }
-                  href={`/shows/${show.id}/${selectedSeason.id}/${episode.id}`}
+                  href={`/shows/${show.slug}/${selectedSeason.id}/${episode.id}`}
                 />
               ))}
             </div>

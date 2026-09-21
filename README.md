@@ -7,20 +7,18 @@ A project to archive past VODs from Twitch.
 </div>
 
 ## About this repo.
-This is a project that uses [Baserow](https://baserow.io) to maintain a fully functional VOD archive for Twitch streams, or even videos from other platforms. Complete with chat replay, sorting by date or game, and keyword searching.
+Originally starting as a static Astro site, this project has become a fully self-contained VOD archive for Twitch streams, or even videos from other platforms. Complete with chat replay, sorting by date, game, or searching by keyword.
 
 And of course, this project is open source and fully available under the [MIT License](LICENSE) - modify to your hearts content.
 
 ## How does it work?
-Originally derived from my own [website](https://github.com/rcwowo/website), which was in itself derived from the [astro-erudite](https://github.com/jktrn/astro-erudite) template, this project removed a lot of the unnecessary junk that was scattered around the website and made VOD archival it's own separate thing.
+Originally derived from my own [website](https://github.com/rcwowo/website), this project removed a lot of the unnecessary junk that was scattered around the website and made VOD archival it's own separate thing. It also used to rely heavily on automations, however, the project is now a self-contained dynamic site instead of being purely static.
 
-This project uses a combination of:
+The project heavily relies on Cloudflare's stack:
 
-- A [Baserow](https://baserow.io) instance, which handles the database and webhook automations to deploy the site.
-- A public S3 bucket that stores the chatlogs.
-- The [owoTV CLI](https://github.com/rcwowo/owotv-cli), which does the heavy lifting of adding database entries, downloading and uploading chatlogs, and hitting those webhooks.
-
-This allows the site to remain static so it can be super fast and responsive to use, still be easily updated and maintained, and most importantly, be *technically* completely free to host!
+- A [Cloudflare Worker](https://developers.cloudflare.com/workers/) renders the site on request via [Astro](https://astro.build) SSR.
+- A [Cloudflare D1](https://developers.cloudflare.com/d1/) database stores all the applicable data.
+- A [Cloudflare R2](https://developers.cloudflare.com/r2/) bucket stores the chatlogs for the chat replay feature.
 
 ## How do I modify this?
 Until I make a full guide on how to create the entire system for yourself, you'll have to figure it out and make your own solution if you intend to fork this project. If you find a bug, please report it to me either here on GitHub, or on Discord.
@@ -36,6 +34,11 @@ cd owotv && bun install
 
 # Setup the .env file (you'll have to provide your own keys and such)
 cp .env.example .env
+
+# Create the local D1 database and seed it from the migration snapshot
+bun run db:create
+bun run db:schema
+bun run db:seed
 
 # Run the test server
 bun dev

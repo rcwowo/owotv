@@ -1,11 +1,19 @@
 /// <reference path="../.astro/types.d.ts" />
 /// <reference types="astro/client" />
+/// <reference types="@cloudflare/workers-types" />
 
 interface ImportMetaEnv {
-  readonly BASEROW_DB_TOKEN: string;
-  readonly S3_BASE_URL: string;
+  readonly CHATLOGS_URL: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+interface CloudflareEnv {
+  DB: D1Database;
+}
+
+declare module 'cloudflare:workers' {
+  export const env: CloudflareEnv;
 }

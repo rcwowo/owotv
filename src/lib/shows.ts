@@ -1,6 +1,6 @@
-import { getCollection } from 'astro:content'
+import type { D1DatabaseBinding } from '@/lib/db'
 
-export interface Episode {
+export interface EpisodeSummary {
   id: string
   title: string
   thumbnailUrl: string
@@ -12,12 +12,12 @@ export interface Episode {
 export interface Season {
   id: string
   title: string
-  episodes: Episode[]
+  episodes: EpisodeSummary[]
 }
 
-export interface Show {
-  id: string
-  title: string
+export interface ShowWithSeasons {
+  slug: string
+  name: string
   description: string
   coverUrl: string
   logoUrl: string
@@ -31,60 +31,108 @@ function slugify(text: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-export async function getShows(): Promise<Show[]> {
-  const showsCollection = await getCollection('shows')
-  const episodesCollection = await getCollection('episodes')
 
-  return showsCollection
-    .sort((a, b) => parseFloat(a.data.order) - parseFloat(b.data.order))
-    .map((show) => {
-      // Get all episodes for this show
-      const showEpisodes = episodesCollection.filter((ep) =>
-        ep.data.Shows.some((s) => s.id === parseInt(show.id)),
-      )
+interface EpisodeWithShowsRow {
+  id: string
+  title: string
+  duration: string
+  air_date: string
+  thumbnail_url: string
+  video_url: string
+  season: string
+  show_slugs: string
+}
 
-      // Group episodes by season
-      const seasonMap = new Map<string, Episode[]>()
-      for (const ep of showEpisodes) {
-        const seasonTitle = ep.data.Season
-        if (!seasonMap.has(seasonTitle)) {
-          seasonMap.set(seasonTitle, [])
-        }
-        seasonMap.get(seasonTitle)!.push({
-          id: ep.id,
-          title: ep.data.Title,
-          thumbnailUrl: ep.data['Thumbnail URL'],
-          videoUrl: ep.data['Video URL'],
-          duration: ep.data.Duration,
-          airDate: ep.data['Air Date'],
-        })
+interface ShowWithEpisodesRow {
+  slug: string
+  name: string
+  description: string
+  cover_url: string
+  logo_url: string
+  episode_ids: string
+}
+
+export async function getShows(db: D1DatabaseBinding): Promise<ShowWithSeasons[]> {
+  const { results: el } = await db
+    .prepare(
+      `SELECT e.id, e.title, e.duration, e.air_date, e.thumbnail_url, e.video_url, e.season,
+              json_group_array(se.show_slug) AS show_slugs
+       FROM episodes e
+       LEFT JOIN show_episodes se ON se.episode_id = e.id
+       GROUP BY e.id
+       ORDER BY e.rank ASC`,
+    )
+    .all<EpisodeWithShowsRow>()
+
+  const { results: sl } = await db
+    .prepare(
+      `SELECT s.slug, s.name, s.description, s.cover_url, s.logo_url,
+              json_group_array(se.episode_id) AS episode_ids
+       FROM shows s
+       LEFT JOIN show_episodes se ON se.show_slug = s.slug
+       GROUP BY s.slug
+       ORDER BY s.rank ASC`,
+    )
+    .all<ShowWithEpisodesRow>()
+
+  const episodes = el.map((row): EpisodeSummary & { season: string; showSlugs: string[] } => ({
+    id: row.id,
+    title: row.title,
+    duration: row.duration,
+    thumbnailUrl: row.thumbnail_url,
+    videoUrl: row.video_url,
+    airDate: new Date(`${row.air_date}T00:00:00Z`),
+    season: row.season,
+    showSlugs: JSON.parse(row.show_slugs).filter(Boolean) as string[],
+  }))
+
+  return sl.map((r): ShowWithSeasons => {
+    const showEpisodes = episodes.filter((e) => e.showSlugs.includes(r.slug))
+
+    const seasonMap = new Map<string, EpisodeSummary[]>()
+    for (const ep of showEpisodes) {
+      if (!seasonMap.has(ep.season)) {
+        seasonMap.set(ep.season, [])
       }
-
-      // Convert to seasons array and sort episodes within each season
-      const seasons: Season[] = Array.from(seasonMap.entries()).map(
-        ([title, episodes]) => ({
-          id: slugify(title),
-          title,
-          episodes: episodes.sort(
-            (a, b) => a.airDate.getTime() - b.airDate.getTime(),
-          ),
-        }),
-      )
-
-      // Sort seasons by earliest episode air date
-      seasons.sort((a, b) => {
-        const aDate = a.episodes[0]?.airDate.getTime() ?? 0
-        const bDate = b.episodes[0]?.airDate.getTime() ?? 0
-        return aDate - bDate
+      seasonMap.get(ep.season)!.push({
+        id: ep.id,
+        title: ep.title,
+        thumbnailUrl: ep.thumbnailUrl,
+        videoUrl: ep.videoUrl,
+        duration: ep.duration,
+        airDate: ep.airDate,
       })
+    }
 
-      return {
-        id: show.id,
-        title: show.data.Name,
-        description: show.data.Description,
-        coverUrl: show.data['Cover URL'],
-        logoUrl: show.data['Logo URL'],
-        seasons,
-      }
+    const seasons: Season[] = Array.from(seasonMap.entries()).map(
+      ([title, se]) => ({
+        id: slugify(title),
+        title,
+        episodes: se.sort((a, b) => a.airDate.getTime() - b.airDate.getTime()),
+      }),
+    )
+
+    seasons.sort((a, b) => {
+      const aDate = a.episodes[0]?.airDate.getTime() ?? 0
+      const bDate = b.episodes[0]?.airDate.getTime() ?? 0
+      return aDate - bDate
     })
+
+    return {
+      slug: r.slug,
+      name: r.name,
+      description: r.description,
+      coverUrl: r.cover_url,
+      logoUrl: r.logo_url,
+      seasons,
+    }
+  })
+}
+
+export async function getShow(
+  db: D1DatabaseBinding,
+  showSlug: string,
+): Promise<ShowWithSeasons | null> {
+  const shows = await getShows(db)
+  return shows.find((s) => s.slug === showSlug) ?? null
 }

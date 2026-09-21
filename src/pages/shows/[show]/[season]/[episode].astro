@@ -3,61 +3,51 @@ import { buttonVariants } from '@/components/ui/button'
 import { EpisodePlaylist } from '@/components/shows/EpisodePlaylist'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubeVideoID } from '@/lib/utils'
-import { getShows } from '@/lib/shows'
+import { getShow } from '@/lib/shows'
+import { getDb } from '@/lib/db'
 import { Icon } from 'astro-icon/components'
 
-export async function getStaticPaths() {
-  const shows = await getShows()
-  const paths = []
-  for (const show of shows) {
-    for (const season of show.seasons) {
-      for (const episode of season.episodes) {
-        paths.push({
-          params: {
-            showId: show.id,
-            seasonId: season.id,
-            episodeId: episode.id,
-          },
-          props: { show, season, episode },
-        })
-      }
-    }
-  }
-  return paths
+const db = getDb()
+const { show, season: seasonId, episode: episodeId } = Astro.params
+const showEntry =
+  show !== undefined ? await getShow(db, show) : null
+const season =
+  showEntry?.seasons.find((s) => s.id === seasonId) ?? null
+const episode =
+  season?.episodes.find((e) => e.id === episodeId) ?? null
+
+if (!showEntry || !season || !episode) {
+  return Astro.rewrite('/404')
 }
 
-const { show, season, episode } = Astro.props
 const youtubeId = getYouTubeVideoID(episode.videoUrl)
 ---
 
 <MinimalLayout
-  title={`${episode.title} - ${show.title}`}
-  description={`Watch ${show.title}: ${episode.title}`}
+  title={`${episode.title} - ${showEntry.name}`}
+  description={`Watch ${showEntry.name}: ${episode.title}`}
   image={episode.thumbnailUrl}
 >
   <main class="flex h-screen flex-col bg-background">
-    <!-- Top Navigation Bar -->
     <div class="flex items-center justify-between border-b bg-background p-4">
       <a
-        href={`/shows/${show.id}`}
+        href={`/shows/${showEntry.slug}`}
         class={buttonVariants({ variant: 'outline', size: 'sm' })}
       >
         <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
-        <span class="hidden md:inline">Back to {show.title}</span>
+        <span class="hidden md:inline">Back to {showEntry.name}</span>
       </a>
       <div class="flex items-center gap-4 text-right">
         <div>
           <h1 class="truncate text-sm font-semibold">{episode.title}</h1>
           <p class="truncate text-xs text-muted-foreground">
-            {show.title} • {season.title}
+            {showEntry.name} • {season.title}
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Content Area -->
     <div class="flex flex-1 overflow-hidden">
-      <!-- Main Player Area -->
       <div class="flex flex-1 flex-col bg-black relative">
         <div class="flex-1 flex items-center justify-center">
         {
@@ -78,10 +68,9 @@ const youtubeId = getYouTubeVideoID(episode.videoUrl)
         </div>
       </div>
 
-       <!-- Playlist Sidebar  -->
         <EpisodePlaylist 
             client:load 
-            show={show} 
+            show={showEntry} 
             currentSeasonId={season.id} 
             currentEpisodeId={episode.id} 
         />

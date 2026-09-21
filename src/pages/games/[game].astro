@@ -2,34 +2,35 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import Layout from '@/layouts/Layout.astro'
 import VodCard from '@/components/vods/VodCard.astro'
-import { getCollection } from 'astro:content'
+import { getDb, getVods } from '@/lib/db'
 
-export async function getStaticPaths() {
-  const vods = await getCollection('vods')
-  const sortedVods = vods.sort(
-    (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-  )
+const db = getDb()
+const sortedVods = (await getVods(db)).sort(
+  (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
+)
 
-  // Get unique games and their first VOD's cover URL
-  const gameData = sortedVods.reduce((acc: Record<string, { vods: typeof vods; coverUrl: string }>, vod) => {
-    const game = vod.data['Game'] || 'Other'
-    if (!acc[game]) {
-      acc[game] = {
-        vods: [],
-        coverUrl: vod.data['Game Cover URL'] || ''
-      }
+const gameData = sortedVods.reduce((acc: Record<string, { vods: typeof sortedVods; coverUrl: string }>, vod) => {
+  const game = vod.game || 'Other'
+  if (!acc[game]) {
+    acc[game] = {
+      vods: [],
+      coverUrl: vod.gameCoverUrl || ''
     }
-    acc[game].vods.push(vod)
-    return acc
-  }, {})
+  }
+  acc[game].vods.push(vod)
+  return acc
+}, {})
 
-  return Object.entries(gameData).map(([game, { vods: gameVods, coverUrl }]) => ({
-    params: { game: game.toLowerCase().replace(/[^a-z0-9]+/g, '-') },
-    props: { game, vods: gameVods, coverUrl },
-  }))
-}
+const slugifyGame = (game: string) =>
+  game.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
-const { game, vods, coverUrl } = Astro.props
+const entry = Object.entries(gameData).find(
+  ([game]) => slugifyGame(game) === Astro.params.game,
+)
+
+if (!entry) return Astro.rewrite('/404')
+
+const [game, { vods, coverUrl }] = entry
 ---
 
 <Layout 

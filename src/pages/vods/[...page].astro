@@ -2,27 +2,32 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PaginationComponent from '@/components/ui/pagination'
 import VodCard from '@/components/vods/VodCard.astro'
+import { getDb, getVods } from '@/lib/db'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import type { PaginateFunction } from 'astro'
-import { getCollection, type CollectionEntry } from 'astro:content'
 
-export async function getStaticPaths({
-  paginate,
-}: {
-  paginate: PaginateFunction
-}) {
-  const allVods: CollectionEntry<'vods'>[] = await getCollection('vods')
-  return paginate(
-    allVods.sort(
-      (a, b) =>
-        b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-    ),
-    { pageSize: SITE.VODS_PER_PAGE },
-  )
+const db = getDb()
+const allVods = (await getVods(db)).sort(
+  (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
+)
+
+const pageSize = SITE.VODS_PER_PAGE
+const total = allVods.length
+const lastPage = Math.max(1, Math.ceil(total / pageSize))
+
+const pageParam = Astro.params.page
+let currentPage = 1
+if (pageParam) {
+  if (!/^\d+$/.test(pageParam)) return Astro.rewrite('/404')
+  currentPage = parseInt(pageParam, 10)
+  if (currentPage < 1 || currentPage > lastPage) return Astro.rewrite('/404')
 }
 
-const { page } = Astro.props
+const page = {
+  data: allVods.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+  currentPage,
+  lastPage: lastPage,
+}
 ---
 
 <Layout title="Browse" description="Archive of all Twitch streams">

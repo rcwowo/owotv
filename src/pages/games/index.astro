@@ -1,21 +1,22 @@
 ---
 import Layout from '@/layouts/Layout.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import { getCollection } from 'astro:content'
+import { getDb, getVods } from '@/lib/db'
 import GameCard from '@/components/vods/GameCard.astro'
 
-const vods = await getCollection('vods')
+const db = getDb()
+const vods = await getVods(db)
 const sortedVods = vods.sort(
-  (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
+  (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
 )
 
 const vodsByGame = sortedVods.reduce(
   (acc: Record<string, { vods: typeof vods; coverUrl: string }>, vod) => {
-    const game = vod.data['Game'] || 'Other'
+    const game = vod.game || 'Other'
     if (!acc[game]) {
       acc[game] = {
         vods: [],
-        coverUrl: vod.data['Game Cover URL'] || ''
+        coverUrl: vod.gameCoverUrl || ''
       }
     }
     acc[game].vods.push(vod)
@@ -24,7 +25,6 @@ const vodsByGame = sortedVods.reduce(
   {} as Record<string, { vods: typeof vods; coverUrl: string }>,
 )
 
-// Sort games by number of VODs (descending)
 const sortedGames = Object.entries(vodsByGame).sort((a, b) => 
   b[1].vods.length - a[1].vods.length
 )

@@ -1,4 +1,4 @@
-import type { Episode } from '@/lib/shows'
+import type { EpisodeSummary as Episode } from '@/lib/shows'
 import { cn } from '@/lib/utils'
 import { Play } from 'lucide-react'
 

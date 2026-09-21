@@ -4,8 +4,10 @@ import ShowCard from '@/components/shows/ShowCard.astro'
 import Layout from '@/layouts/Layout.astro'
 import { SITE } from '@/consts'
 import { getShows } from '@/lib/shows'
+import { getDb } from '@/lib/db'
 
-const shows = await getShows()
+const db = getDb()
+const shows = await getShows(db)
 ---
 
 <Layout title="Shows" description={`Curated shows created and produced by ${SITE.TITLE}`}>

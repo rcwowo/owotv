@@ -8,17 +8,18 @@ import {
 } from '@/components/ui/card'
 import Layout from '@/layouts/Layout.astro'
 import { cn } from '@/lib/utils'
-import { getCollection } from 'astro:content'
+import { getDb, getVods } from '@/lib/db'
 
-const vods = await getCollection('vods')
+const db = getDb()
+const vods = await getVods(db)
 const sortedVods = vods.sort(
-  (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
+  (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
 )
 
 const vodsByYear = sortedVods.reduce(
   (acc: Record<string, Record<string, typeof vods>>, vod) => {
-    const year = vod.data['Stream Date'].getFullYear().toString()
-    const monthYear = vod.data['Stream Date'].toLocaleString('en-US', {
+    const year = vod.streamDate.getFullYear().toString()
+    const monthYear = vod.streamDate.toLocaleString('en-US', {
       month: 'long',
       year: 'numeric',
     })
@@ -42,8 +43,8 @@ const sortedYears = Object.keys(vodsByYear).sort(
 const sortMonths = (months: [string, typeof vods][]) =>
   months.sort(
     (a, b) =>
-      b[1][0]!.data['Stream Date'].valueOf() -
-      a[1][0]!.data['Stream Date'].valueOf(),
+      b[1][0]!.streamDate.valueOf() -
+      a[1][0]!.streamDate.valueOf(),
   )
 
 const videoLabel = (count: number) =>

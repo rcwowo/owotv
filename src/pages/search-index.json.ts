@@ -1,5 +1,6 @@
-import { getCollection } from 'astro:content'
+import type { APIContext } from 'astro'
 import { getShows } from '@/lib/shows'
+import { getDb, getVods } from '@/lib/db'
 import {
   buildDateTokens,
   buildSearchBlob,
@@ -9,21 +10,20 @@ import {
   type SearchIndexItem,
 } from '@/lib/search'
 
-export const prerender = true
-
-export async function GET() {
-  const vods = await getCollection('vods')
-  const shows = await getShows()
+export async function GET(context: APIContext) {
+  const db = getDb()
+  const vods = await getVods(db)
+  const shows = await getShows(db)
   const index: SearchIndexItem[] = []
 
   const sortedVods = [...vods].sort(
-    (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
+    (a, b) => b.streamDate.valueOf() - a.streamDate.valueOf(),
   )
 
   for (const vod of sortedVods) {
-    const title = vod.data['Title']
-    const game = vod.data['Game'] || 'Other'
-    const date = vod.data['Stream Date']
+    const title = vod.title
+    const game = vod.game || 'Other'
+    const date = vod.streamDate
     const dateISO = date.toISOString()
     const dateDisplay = date.toLocaleDateString('en-US', {
       month: 'long',
@@ -50,7 +50,7 @@ export async function GET() {
 
   const games = sortedVods.reduce(
     (acc, vod) => {
-      const game = vod.data['Game'] || 'Other'
+      const game = vod.game || 'Other'
       if (!acc.has(game)) acc.set(game, 0)
       acc.set(game, acc.get(game)! + 1)
       return acc
@@ -75,16 +75,16 @@ export async function GET() {
   }
 
   for (const show of shows) {
-    const showTokens = tokenizeField(show.title)
+    const showTokens = tokenizeField(show.name)
     const descTokens = tokenizeField(show.description)
-    const showBlob = buildSearchBlob([show.title, show.description, 'show', 'series'])
+    const showBlob = buildSearchBlob([show.name, show.description, 'show', 'series'])
 
     index.push({
       type: 'show',
-      title: show.title,
+      title: show.name,
       subtitle: show.description,
       category: 'Show',
-      href: `/shows/${show.id}`,
+      href: `/shows/${show.slug}`,
       searchText: showBlob.text,
       searchCompact: showBlob.compact,
       _w: { title: [...showTokens, ...descTokens], show: showTokens },
@@ -104,7 +104,7 @@ export async function GET() {
         const dateTokens = buildDateTokens(date)
         const blob = buildSearchBlob([
           title,
-          show.title,
+          show.name,
           season.title,
           ...dateTokens,
           'show',
@@ -114,9 +114,9 @@ export async function GET() {
         index.push({
           type: 'episode',
           title,
-          subtitle: `${show.title} · ${season.title} · ${dateDisplay}`,
+          subtitle: `${show.name} · ${season.title} · ${dateDisplay}`,
           category: 'Episode',
-          href: `/shows/${show.id}/${season.id}/${episode.id}`,
+          href: `/shows/${show.slug}/${season.id}/${episode.id}`,
           searchText: blob.text,
           searchCompact: blob.compact,
           _w: {
@@ -133,7 +133,7 @@ export async function GET() {
 
   const monthYears = new Map<string, number>()
   for (const vod of sortedVods) {
-    const monthYear = vod.data['Stream Date'].toLocaleString('en-US', {
+    const monthYear = vod.streamDate.toLocaleString('en-US', {
       month: 'long',
       year: 'numeric',
     })

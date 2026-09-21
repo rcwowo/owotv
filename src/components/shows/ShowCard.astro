@@ -1,5 +1,5 @@
 ---
-import type { Show } from '@/lib/shows'
+import type { ShowWithSeasons as Show } from '@/lib/shows'
 
 interface Props {
   show: Show
@@ -10,12 +10,12 @@ const { show } = Astro.props
 
 <div class="relative aspect-video">
   <a
-    href={`/shows/${show.id}`}
+    href={`/shows/${show.slug}`}
     class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   >
     <img
       src={show.coverUrl}
-      alt={show.title}
+      alt={show.name}
       class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
     />
 
@@ -29,7 +29,7 @@ const { show } = Astro.props
       class="absolute inset-x-0 bottom-0 p-6 opacity-0 transition-all duration-300 group-hover:opacity-100"
     >
       <h3 class="mb-2 text-xl font-bold tracking-tight text-white">
-        {show.title}
+        {show.name}
       </h3>
       <p class="mb-4 line-clamp-2 text-sm text-gray-200">
         {show.description}

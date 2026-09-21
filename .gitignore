@@ -1,5 +1,7 @@
 # build output
 dist/
+# local wrangler state (D1, etc)
+.wrangler/
 # generated types
 .astro/
 
@@ -31,5 +33,6 @@ bun.lockb
 # jetbrains setting folder
 .idea/
 
-teaser.pptx
-~$teaser.pptx
+# DB Migration-related stuff
+migration/baserow-export/*
+migration/seed.sql
