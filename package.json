@@ -16,11 +16,9 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "db:generate": "bun run migration/generate-seed.ts",
     "db:create": "bunx wrangler d1 create owotv",
     "db:schema": "bunx wrangler d1 execute owotv --local --file=migration/schema.sql",
-    "db:seed": "bunx wrangler d1 execute owotv --local --file=migration/seed.sql",
-    "db:reset": "bunx wrangler d1 execute owotv --local --command \"DROP TABLE IF EXISTS show_episodes; DROP TABLE IF EXISTS episodes; DROP TABLE IF EXISTS shows; DROP TABLE IF EXISTS vods;\" --file=migration/schema.sql --file=migration/seed.sql",
+    "db:reset": "bunx wrangler d1 execute owotv --local --command \"DROP TABLE IF EXISTS show_episodes; DROP TABLE IF EXISTS episodes; DROP TABLE IF EXISTS shows; DROP TABLE IF EXISTS vods;\" --file=migration/schema.sql",
     "prettier": "prettier --write ."
   },
   "dependencies": {

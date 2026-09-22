@@ -7,7 +7,7 @@ import cloudflare from '@astrojs/cloudflare'
 import icon from 'astro-icon'
 
 export default defineConfig({
-  site: 'https://owo.rcw.lol',
+  site: 'https://tv.rcw.lol',
   output: 'server',
   adapter: cloudflare(),
   vite: {

@@ -32,13 +32,9 @@ git clone https://github.com/rcwowo/owotv
 # Install dependencies
 cd owotv && bun install
 
-# Setup the .env file (you'll have to provide your own keys and such)
-cp .env.example .env
-
-# Create the local D1 database and seed it from the migration snapshot
+# Create the databases
 bun run db:create
 bun run db:schema
-bun run db:seed
 
 # Run the test server
 bun dev

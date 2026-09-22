@@ -17,15 +17,9 @@ if (!vod) return Astro.rewrite('/404')
 
 const youtubeId = getYouTubeVideoID(vod.vodUrl)
 
-const { CHATLOGS_URL } = import.meta.env
-let chatReplayUrl: string | undefined
-
-if (vod.chatReplayPath && CHATLOGS_URL) {
-  chatReplayUrl = new URL(
-    vod.chatReplayPath.replace(/^\//, ''),
-    CHATLOGS_URL.endsWith('/') ? CHATLOGS_URL : `${CHATLOGS_URL}/`,
-  ).href
-}
+const chatReplayUrl = vod.chatReplayPath
+  ? `/chatlogs/${vod.chatReplayPath.replace(/^\//, '')}`
+  : undefined
 
 const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
 ---

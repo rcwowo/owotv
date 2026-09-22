@@ -16,7 +16,7 @@ export interface Vod {
 export type D1DatabaseBinding = D1Database
 
 export function getDb(): D1DatabaseBinding {
-  const db = (env as { DB?: D1DatabaseBinding }).DB
+  const db = env.DB
   if (!db) {
     throw new Error(
       'D1 binding "DB" not found. Ensure it is defined in wrangler.jsonc.',
