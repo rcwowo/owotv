@@ -9,7 +9,7 @@
 			"binding": "DB",
 			"database_name": "owotv",
 			"database_id": "78904ed7-8777-44ef-851c-0707285adde2",
-			"migrations_dir": "../../migration"
+			"migrations_dir": "./migration"
 		}
 	],
 	"r2_buckets": [

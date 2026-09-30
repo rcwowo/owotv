@@ -10,6 +10,9 @@ export default defineConfig({
   site: 'https://tv.rcw.lol',
   output: 'server',
   adapter: cloudflare(),
+  security: {
+    checkOrigin: false,
+  },
   vite: {
     plugins: [tailwindcss()],
   },

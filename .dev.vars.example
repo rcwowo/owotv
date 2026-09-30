@@ -1,0 +1,5 @@
+# Local development only. Copy to .dev.vars and adjust.
+# Generate a key: openssl rand -hex 24
+ADMIN_API_KEYS=dev-admin-key
+READ_API_KEYS=dev-read-key
+SITE_URL=http://localhost:1234

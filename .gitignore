@@ -36,3 +36,5 @@ bun.lockb
 # DB Migration-related stuff
 migration/baserow-export/*
 migration/seed.sql
+# wrangler dev secrets
+.dev.vars

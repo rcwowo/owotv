@@ -39,3 +39,55 @@ bun run db:schema
 # Run the test server
 bun dev
 ```
+
+## API
+Instances expose an authenticated management API under `/api/v1` for the [owoTV CLI](https://github.com/rcwowo/owotv) (and anything else) to drive the D1 database and R2 chatlogs bucket remotely - including unpublished (draft) VODs.
+
+### Keys
+Keys are secrets set per instance:
+
+```sh
+# production (Cloudflare)
+bunx wrangler secret put ADMIN_API_KEYS   # comma-separated, full access
+bunx wrangler secret put READ_API_KEYS    # comma-separated, GET/HEAD only
+export SITE_URL=https://tv.rcw.lol        # used for cache purging
+
+# local development
+cp .dev.vars.example .dev.vars
+```
+
+Admin keys can read and write. Read keys can only call GET/HEAD endpoints, which is handy for read-only views on someone else's published instance. Keys are sent as `Authorization: Bearer <key>` or `X-API-Key: <key>`.
+
+### Endpoints
+Interactive docs are served at `/api/v1/docs` (Scalar) and the raw OpenAPI 3.1 spec at `/api/v1/openapi.json`; `GET /api/v1` is a machine-readable discovery endpoint.
+
+```
+GET  /api/v1                              discovery
+GET  /api/v1/docs                         Scalar API reference (browser)
+GET  /api/v1/openapi.json                 OpenAPI spec
+GET/POST  /api/v1/vods                    list (earns drafts for admin) / create
+GET/PUT/DELETE /api/v1/vods/{id}          single VOD (full DB columns; drafts for admin)
+GET/POST  /api/v1/shows                   list / create
+GET/PUT/DELETE /api/v1/shows/{slug}       single show (+ episode_ids)
+POST/DELETE /api/v1/shows/{slug}/episodes/{episodeId}   link/unlink episode
+GET/POST  /api/v1/episodes                list / create
+GET/PUT/DELETE /api/v1/episodes/{id}      single episode
+GET  /api/v1/chatlogs?limit=&cursor=&prefix=   R2 object listing
+POST /api/v1/chatlogs  (X-Object-Key, body streamed)  upload
+GET/PUT/DELETE /api/v1/chatlogs/{path}    fetch (streams) / replace / delete
+GET  /api/v1/chatlogs/{path}  with X-Object-Metadata header = HEAD-equivalent
+DELETE /api/v1/chatlogs?key=...&key=...   bulk delete (up to 1000 keys, enforced)
+```
+
+Chatlog uploads stream straight into R2 without buffering, so large files (100MB+) work from any HTTP client - just POST/PUT the file bytes with a `Content-Type`. Example:
+
+```sh
+curl -X PUT "$INSTANCE/api/v1/chatlogs/chat/2026-01-01.jsonl" \
+  -H "Authorization: Bearer $KEY" \
+  -H "Content-Type: application/jsonl" \
+  --data-binary @chatlog.jsonl
+```
+
+Mutating catalog data (VODs, shows, episodes, links) purges the site's edge cache for the affected pages automatically.
+
+Note: `security.checkOrigin` is disabled in this project so CLI clients can drive the API with plain HTTP methods; there are no browser HTML forms in this app to protect.
