@@ -1,4 +1,5 @@
-import { defineCollection, z } from 'astro:content'
+import { defineCollection } from 'astro:content'
+import { z } from 'astro/zod'
 
 type BaserowListResponse<T> = {
   next: string | null
@@ -47,9 +48,9 @@ const vods = defineCollection({
     'Stream Date': z.coerce.date(),
     'Duration': z.string(),
     'Game': z.string(),
-    'Game Cover URL': z.string().url(),
-    'VOD URL': z.string().url(),
-    'Thumbnail URL': z.string().url(),
+    'Game Cover URL': z.url(),
+    'VOD URL': z.url(),
+    'Thumbnail URL': z.url(),
     'Chat Replay Path': z.preprocess(
       (val) => (val === '' ? undefined : val),
       z.string().optional(),
@@ -72,8 +73,8 @@ const shows = defineCollection({
     'order': z.string(),
     'Name': z.string(),
     'Description': z.string(),
-    'Cover URL': z.string().url(),
-    'Logo URL': z.string().url(),
+    'Cover URL': z.url(),
+    'Logo URL': z.url(),
     'Episodes': z.array(
       z.object({
         id: z.number(),
@@ -100,8 +101,8 @@ const episodes = defineCollection({
     'Title': z.string(),
     'Duration': z.string(),
     'Air Date': z.coerce.date(),
-    'Thumbnail URL': z.string().url(),
-    'Video URL': z.string().url(),
+    'Thumbnail URL': z.url(),
+    'Video URL': z.url(),
     'Season': z.string(),
     'Shows': z.array(
       z.object({

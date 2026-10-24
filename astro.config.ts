@@ -8,6 +8,9 @@ import icon from 'astro-icon'
 // https://astro.build/config
 export default defineConfig({
   site: 'https://owo.rcw.lol',
+  // Astro 7 defaults to JSX whitespace stripping. Keep the pre-v7 HTML-aware
+  // behavior so spacing between inline elements is preserved.
+  compressHTML: true,
   vite: {
     plugins: [tailwindcss()],
   },
