@@ -1,12 +1,11 @@
 import {
   CHAT_FORMAT_VERSION,
-  DEFAULT_SEGMENT_SECONDS,
+  pickSegmentSeconds,
   segmentForTime,
   type ChatFragment,
   type ChatManifest,
   type ChatSegment,
   type ChatUser,
-  type ThirdPartyEmote,
 } from './chat'
 
 export interface TwitchDownloaderComment {
@@ -36,7 +35,7 @@ export interface ChatArchive {
 export interface BuildChatArchiveOptions {
   durationS?: number
   segmentSeconds?: number
-  emotes?: Record<string, ThirdPartyEmote>
+  emoteSet?: string | null
 }
 
 function toFragments(c: TwitchDownloaderComment): ChatFragment[] {
@@ -59,7 +58,6 @@ export function buildChatArchive(
   chat: TwitchDownloaderChat,
   opts: BuildChatArchiveOptions = {},
 ): ChatArchive {
-  const segmentSeconds = opts.segmentSeconds ?? DEFAULT_SEGMENT_SECONDS
   const comments = [...chat.comments].sort(
     (a, b) => a.content_offset_seconds - b.content_offset_seconds,
   )
@@ -67,6 +65,8 @@ export function buildChatArchive(
   const durationS = Math.ceil(
     opts.durationS ?? chat.video?.length ?? lastOffset,
   )
+  const segmentSeconds =
+    opts.segmentSeconds ?? pickSegmentSeconds(comments.length, durationS)
   const segmentTotal = Math.max(
     1,
     Math.ceil(Math.max(durationS, lastOffset + 1) / segmentSeconds),
@@ -123,7 +123,7 @@ export function buildChatArchive(
       durationS,
       messageCount: comments.length,
       segments: counts,
-      emotes: opts.emotes ?? {},
+      emoteSet: opts.emoteSet ?? null,
     },
     segments: [...built.values()]
       .map((e) => e.seg)

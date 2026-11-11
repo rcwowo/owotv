@@ -1,7 +1,16 @@
 import { z } from 'zod'
 
 export const CHAT_FORMAT_VERSION = 1
-export const DEFAULT_SEGMENT_SECONDS = 300
+export const MIN_SEGMENT_SECONDS = 300
+export const MAX_SEGMENT_SECONDS = 3600
+export const TARGET_SEGMENT_MESSAGES = 1000
+
+export function pickSegmentSeconds(messageCount: number, durationS: number) {
+  if (messageCount <= 0) return MAX_SEGMENT_SECONDS
+  const ideal = (durationS * TARGET_SEGMENT_MESSAGES) / messageCount
+  const rounded = Math.ceil(ideal / MIN_SEGMENT_SECONDS) * MIN_SEGMENT_SECONDS
+  return Math.min(MAX_SEGMENT_SECONDS, Math.max(MIN_SEGMENT_SECONDS, rounded))
+}
 
 export const chatManifestKey = (vodSlug: string) =>
   `chat/${vodSlug}/manifest.json`
@@ -47,13 +56,18 @@ export const thirdPartyEmote = z.object({
 })
 export type ThirdPartyEmote = z.infer<typeof thirdPartyEmote>
 
+export const emoteSet = z.record(z.string(), thirdPartyEmote)
+export type EmoteSet = z.infer<typeof emoteSet>
+
+export const emoteSetKey = (hash: string) => `emotes/${hash}.json`
+
 export const chatManifest = z.object({
   v: z.literal(CHAT_FORMAT_VERSION),
   segmentSeconds: z.number().int().positive(),
   durationS: z.number().int().nonnegative(),
   messageCount: z.number().int().nonnegative(),
   segments: z.array(z.number().int().nonnegative()),
-  emotes: z.record(z.string(), thirdPartyEmote).default({}),
+  emoteSet: z.string().nullable().default(null),
 })
 export type ChatManifest = z.infer<typeof chatManifest>
 

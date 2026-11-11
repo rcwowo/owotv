@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { chatManifest, chatSegment, resolveSegment } from './chat'
+import {
+  chatManifest,
+  chatSegment,
+  pickSegmentSeconds,
+  resolveSegment,
+} from './chat'
 import {
   buildChatArchive,
   type TwitchDownloaderComment,
@@ -90,5 +95,23 @@ describe('buildChatArchive', () => {
     const { manifest, segments } = buildChatArchive({ comments: [] })
     expect(manifest.segments).toEqual([0])
     expect(segments).toEqual([])
+  })
+})
+
+describe('pickSegmentSeconds', () => {
+  test('aims for ~1000 messages per segment within bounds', () => {
+    expect(pickSegmentSeconds(0, 7200)).toBe(3600)
+    expect(pickSegmentSeconds(500, 7200)).toBe(3600)
+    expect(pickSegmentSeconds(4000, 3600)).toBe(900)
+    expect(pickSegmentSeconds(100_000, 3600)).toBe(300)
+  })
+
+  test('is used when no segment length is given', () => {
+    const comments = Array.from({ length: 10 }, (_, i) =>
+      comment(i * 600, 'a', 'x'),
+    )
+    const { manifest } = buildChatArchive({ comments, video: { length: 6000 } })
+    expect(manifest.segmentSeconds).toBe(3600)
+    expect(manifest.segments).toEqual([6, 4])
   })
 })

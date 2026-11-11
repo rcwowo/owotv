@@ -25,7 +25,8 @@
     "db:generate": "bun --filter @owotv/db generate",
     "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
     "test": "bun --filter \"./packages/*\" test",
-    "typecheck": "bun --filter \"./packages/*\" typecheck"
+    "typecheck": "bun --filter \"./packages/*\" --filter \"./apps/cli\" typecheck",
+    "owotv": "bun --env-file=apps/web/.env apps/cli/src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",
