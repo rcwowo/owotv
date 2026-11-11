@@ -1,11 +1,11 @@
 #!/usr/bin/env -S npx tsx
-import { ApiRequestError } from '@owotv/core'
 import { channel } from './commands/channel'
 import { chat } from './commands/chat'
 import { login, whoami } from './commands/login'
 import { migrate, usage as migrateUsage } from './commands/migrate'
 import { token } from './commands/token'
 import { vod } from './commands/vod'
+import { errorMessage } from './output'
 
 const commands = {
   login,
@@ -27,10 +27,24 @@ ${Object.entries(commands)
   .map(([name, c]) => `  ${name.padEnd(10)} ${c.summary}`)
   .join('\n')}
 
+Run \`owotv\` with no command (or \`owotv tui\`) for the interactive TUI.
 Run \`owotv <command> --help\` for details.`
 
 const [name, ...rest] = process.argv.slice(2)
 const command = name ? commands[name as keyof typeof commands] : undefined
+
+const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)
+
+if (name === 'tui' || (!name && interactive)) {
+  try {
+    if (!interactive) throw new Error('The TUI needs an interactive terminal.')
+    const { runTui } = await import('./tui')
+    process.exit(await runTui())
+  } catch (err) {
+    console.error(`error: ${errorMessage(err)}`)
+    process.exit(1)
+  }
+}
 
 if (!command) {
   console.log(usage)
@@ -40,10 +54,7 @@ if (!command) {
 try {
   process.exit(await command.run(rest))
 } catch (err) {
-  const message =
-    err instanceof ApiRequestError
-      ? `${err.message} (HTTP ${err.status})`
-      : (err as Error).message
+  const message = errorMessage(err)
   if (rest.includes('--json')) {
     console.log(JSON.stringify({ error: message }))
   } else {

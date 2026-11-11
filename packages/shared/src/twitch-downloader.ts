@@ -9,8 +9,10 @@ import {
 } from './chat'
 
 export interface TwitchDownloaderComment {
+  _id?: string
+  created_at?: string
   content_offset_seconds: number
-  commenter: { display_name: string; name: string }
+  commenter: { display_name: string; name: string; _id?: string }
   message: {
     body: string
     user_color?: string | null

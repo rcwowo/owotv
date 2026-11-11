@@ -1,5 +1,6 @@
-import type { IngestEvent } from '@owotv/core'
+import { ApiRequestError, type IngestEvent } from '@owotv/core'
 import { readFile } from 'node:fs/promises'
+import { createInterface } from 'node:readline/promises'
 
 export interface Output {
   json: boolean
@@ -8,9 +9,30 @@ export interface Output {
   onEvent: (event: IngestEvent) => void
 }
 
+export async function confirm(question: string, yes: boolean) {
+  if (yes) return
+  if (!process.stdin.isTTY) {
+    throw new Error(`${question} Pass --yes to confirm.`)
+  }
+  const rl = createInterface({ input: process.stdin, output: process.stderr })
+  try {
+    const answer = await rl.question(`${question} (y/N) `)
+    if (!/^y(es)?$/i.test(answer.trim())) throw new Error('Cancelled.')
+  } finally {
+    rl.close()
+  }
+}
+
+export function errorMessage(err: unknown) {
+  if (err instanceof ApiRequestError)
+    return `${err.message} (HTTP ${err.status})`
+  return err instanceof Error ? err.message : String(err)
+}
+
 export function output(json: boolean): Output {
   const log = json ? () => {} : (message: string) => console.error(message)
   let lastLabel = ''
+  let lastStep = -1
   return {
     json,
     log,
@@ -21,13 +43,15 @@ export function output(json: boolean): Output {
     onEvent(e) {
       if (e.type === 'step') log(`→ ${e.message}`)
       else if (e.type === 'warn') log(`  ! ${e.message}`)
-      else if (
-        e.done === e.total ||
-        e.label !== lastLabel ||
-        e.done % 10 === 0
-      ) {
-        lastLabel = e.label
-        log(`  ${e.label} ${e.done}/${e.total}`)
+      else {
+        const step = Math.floor((e.done / e.total) * 10)
+        if (e.label !== lastLabel || step > lastStep) {
+          lastLabel = e.label
+          lastStep = step
+          log(
+            `  ${e.label} ${e.unit === '%' ? `${e.done}%` : `${e.done}/${e.total}`}`,
+          )
+        }
       }
     },
   }

@@ -1,8 +1,9 @@
 import { importVod, parseDuration, parseYouTubeId } from '@owotv/core'
-import type { TwitchDownloaderChat, UpdateVodInput } from '@owotv/shared'
+import type { UpdateVodInput } from '@owotv/shared'
 import { parseArgs } from 'node:util'
 import { apiClient } from '../config'
-import { output, readJsonFile, table } from '../output'
+import { loadChat } from '../chat-source'
+import { confirm, output, table } from '../output'
 import { runGroup, type CommandGroup } from './types'
 
 const json = { json: { type: 'boolean', default: false } } as const
@@ -49,10 +50,12 @@ const commands: CommandGroup = {
     },
   },
   add: {
-    summary: 'Import a VOD from a TwitchDownloader chat file',
-    usage: `owotv vod add --chat <file.json> --youtube <url> [options]
+    summary: 'Import a stream from Twitch or a chat file',
+    usage: `owotv vod add (--twitch <url|id> | --chat <file.json>) --youtube <url> [options]
 
-Title, date, length, game chapters and channel come from the chat file.
+Title, date, length, game chapters and channel come from Twitch or the chat file.
+  --twitch <url|id>  Download chat straight from a Twitch VOD
+  --chat <file>      Use a TwitchDownloader chat JSON file instead
   --channel <slug>   Channel to add it to (default: matched from the file)
   --title <text>     Override the stream title
   --date YYYY-MM-DD  Override the stream date
@@ -65,6 +68,7 @@ Title, date, length, game chapters and channel come from the chat file.
         options: {
           ...json,
           chat: { type: 'string' },
+          twitch: { type: 'string' },
           youtube: { type: 'string' },
           channel: { type: 'string' },
           title: { type: 'string' },
@@ -74,11 +78,17 @@ Title, date, length, game chapters and channel come from the chat file.
         },
       })
       const out = output(values.json)
-      if (!values.chat || !values.youtube) {
-        throw new Error('Pass --chat <file.json> and --youtube <url>.')
+      if (!values.youtube) throw new Error('Pass --youtube <url>.')
+      if (!values.chat === !values.twitch) {
+        throw new Error('Pass either --twitch <url|id> or --chat <file.json>.')
       }
-      const chat = await readJsonFile<TwitchDownloaderChat>(values.chat)
       const client = await apiClient({ auth: true })
+      const chat = await loadChat(
+        { file: values.chat, twitch: values.twitch },
+        { onEvent: out.onEvent },
+      )
+      if (!chat)
+        throw new Error('Pass --twitch <url|id> or --chat <file.json>.')
       const { vod, messageCount } = await importVod(client, chat, {
         youtube: values.youtube,
         channel: values.channel,
@@ -133,7 +143,7 @@ Title, date, length, game chapters and channel come from the chat file.
   },
   rm: {
     summary: 'Delete a VOD and its chat',
-    usage: 'owotv vod rm <slug> --yes',
+    usage: 'owotv vod rm <slug> [--yes] [--json]',
     async run(argv) {
       const { values, positionals } = parseArgs({
         args: argv,
@@ -143,9 +153,10 @@ Title, date, length, game chapters and channel come from the chat file.
       const out = output(values.json)
       const slug = positionals[0]
       if (!slug) throw new Error('Pass the VOD slug.')
-      if (!values.yes)
-        throw new Error('This deletes the VOD. Pass --yes to confirm.')
-      await (await apiClient({ auth: true })).deleteVod(slug)
+      const client = await apiClient({ auth: true })
+      const vod = await client.getVod(slug)
+      await confirm(`Delete "${vod.title}" (${slug}) and its chat?`, values.yes)
+      await client.deleteVod(slug)
       out.result({ slug, deleted: true }, () => out.log(`Deleted ${slug}.`))
       return 0
     },

@@ -1,7 +1,7 @@
 import { createToken, findChannel, listTokens, revokeToken } from '@owotv/core'
 import { tokenRoles, type TokenRole } from '@owotv/db'
 import { parseArgs } from 'node:util'
-import { output, table } from '../output'
+import { confirm, output, table } from '../output'
 import { openStore } from '../store'
 import { runGroup, type CommandGroup } from './types'
 
@@ -89,7 +89,7 @@ Talks to D1 directly through wrangler, so it works before any token exists.
   },
   revoke: {
     summary: 'Revoke an API token',
-    usage: 'owotv token revoke <id> --yes [--remote]',
+    usage: 'owotv token revoke <id> [--yes] [--remote]',
     async run(argv) {
       const { values, positionals } = parseArgs({
         args: argv,
@@ -101,7 +101,10 @@ Talks to D1 directly through wrangler, so it works before any token exists.
         throw new Error('Pass the token id.')
       }
       const id = Number(positionals[0])
-      if (!values.yes) throw new Error('Pass --yes to confirm.')
+      await confirm(
+        `Revoke token ${id}${values.remote ? ' on the live site' : ''}?`,
+        values.yes,
+      )
       const revoked = await withStore(values.remote, ({ db }) =>
         revokeToken(db, id),
       )

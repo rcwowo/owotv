@@ -13,7 +13,13 @@ import { mapLimit } from './store'
 export type IngestEvent =
   | { type: 'step'; message: string }
   | { type: 'warn'; message: string }
-  | { type: 'progress'; label: string; done: number; total: number }
+  | {
+      type: 'progress'
+      label: string
+      done: number
+      total: number
+      unit?: '%'
+    }
 
 export interface ChatFileMeta {
   title?: string
@@ -24,7 +30,8 @@ export interface ChatFileMeta {
   chapters: GameChapterInput[]
 }
 
-const boxArt = (url: string) => url.replace(/-\d+x\d+(\.\w+)$/, '-285x380$1')
+const boxArt = (url: string) =>
+  url.replace(/-(\d+x\d+|\{width\}x\{height\})(\.\w+)$/, '-285x380$2')
 
 export function readChatFileMeta(chat: TwitchDownloaderChat): ChatFileMeta {
   const v = chat.video ?? {}
@@ -128,6 +135,15 @@ export async function uploadChat(
   return { vod: updated, messageCount: archive.manifest.messageCount }
 }
 
+export class ChatUploadError extends Error {
+  constructor(
+    readonly slug: string,
+    message: string,
+  ) {
+    super(message)
+  }
+}
+
 export interface ImportVodOptions {
   youtube: string
   channel?: string
@@ -196,7 +212,8 @@ export async function importVod(
     })
     return result
   } catch (err) {
-    throw new Error(
+    throw new ChatUploadError(
+      vod.slug,
       `VOD ${vod.slug} was created but its chat failed to upload: ${(err as Error).message}. Retry with \`owotv chat upload ${vod.slug}\`.`,
     )
   }
