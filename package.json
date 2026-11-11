@@ -26,7 +26,7 @@
     "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
     "test": "bun --filter \"./packages/*\" test",
     "typecheck": "bun --filter \"./packages/*\" --filter \"./apps/cli\" typecheck",
-    "owotv": "bun --env-file=apps/web/.env apps/cli/src/index.ts"
+    "owotv": "tsx --env-file=apps/web/.env apps/cli/src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",
@@ -34,6 +34,7 @@
     "prettier-plugin-astro": "^1.1.2",
     "prettier-plugin-astro-organize-imports": "^0.4.14",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   },
   "overrides": {

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env -S npx tsx
 import { migrate, usage as migrateUsage } from './commands/migrate'
 
 const commands: Record<string, (argv: string[]) => Promise<number>> = {

@@ -7,12 +7,16 @@
     "owotv": "./src/index.ts"
   },
   "scripts": {
-    "start": "bun --env-file=../web/.env src/index.ts",
+    "start": "tsx --env-file=../web/.env src/index.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@owotv/core": "workspace:*",
     "@owotv/db": "workspace:*",
+    "jsonc-parser": "^3.3.1",
     "wrangler": "^4.160.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5"
   }
 }

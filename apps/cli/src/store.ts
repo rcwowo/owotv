@@ -1,10 +1,14 @@
 import type { Store } from '@owotv/core'
 import { createDb } from '@owotv/db'
-import { rm } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { parse } from 'jsonc-parser'
+import { readFile, rm, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { getPlatformProxy } from 'wrangler'
 
-const configPath = resolve(import.meta.dir, '../../web/wrangler.jsonc')
+const configPath = fileURLToPath(
+  new URL('../../web/wrangler.jsonc', import.meta.url),
+)
 const webDir = dirname(configPath)
 
 export async function openStore(
@@ -12,7 +16,7 @@ export async function openStore(
 ): Promise<Store & { dispose: () => Promise<void> }> {
   let path = configPath
   if (opts.remote) {
-    const config = Bun.JSONC.parse(await Bun.file(configPath).text()) as {
+    const config = parse(await readFile(configPath, 'utf8')) as {
       d1_databases?: Array<{ remote?: boolean; migrations_dir?: string }>
       r2_buckets?: Array<{ remote?: boolean }>
     }
@@ -24,7 +28,7 @@ export async function openStore(
     }
     for (const d of config.d1_databases ?? []) delete d.migrations_dir
     path = join(webDir, '.wrangler', 'owotv-remote.json')
-    await Bun.write(path, JSON.stringify(config))
+    await writeFile(path, JSON.stringify(config))
   }
 
   const proxy = await getPlatformProxy<{
