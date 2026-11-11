@@ -18,7 +18,7 @@
       "name": "@owotv/cli",
       "version": "0.0.0",
       "bin": {
-        "owotv": "./src/index.ts",
+        "owotv": "./bin/owotv.js",
       },
       "dependencies": {
         "@owotv/core": "workspace:*",
@@ -29,6 +29,7 @@
         "ink-text-input": "6.0.0",
         "jsonc-parser": "^3.3.1",
         "react": "^19.3.1",
+        "tsx": "^4.23.15",
         "wrangler": "^4.160.1",
       },
       "devDependencies": {

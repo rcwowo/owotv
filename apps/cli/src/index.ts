@@ -1,4 +1,3 @@
-#!/usr/bin/env -S npx tsx
 import { channel } from './commands/channel'
 import { chat } from './commands/chat'
 import { login, whoami } from './commands/login'

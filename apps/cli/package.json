@@ -3,11 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": {
-    "owotv": "./src/index.ts"
-  },
   "scripts": {
-    "start": "tsx --env-file=../web/.env src/index.ts",
+    "start": "node bin/owotv.js",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -19,6 +16,7 @@
     "ink-text-input": "6.0.0",
     "jsonc-parser": "^3.3.1",
     "react": "^19.3.1",
+    "tsx": "^4.23.15",
     "wrangler": "^4.160.1"
   },
   "devDependencies": {

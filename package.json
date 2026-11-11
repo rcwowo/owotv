@@ -10,6 +10,9 @@
   "version": "2.2.1",
   "private": true,
   "type": "module",
+  "bin": {
+    "owotv": "./apps/cli/bin/owotv.js"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -21,12 +24,14 @@
     "dev": "bun --filter @owotv/web dev",
     "build": "bun --filter @owotv/web build",
     "preview": "bun --filter @owotv/web preview",
+    "deploy": "bun --filter @owotv/web deploy",
     "prettier": "prettier --write .",
     "db:generate": "bun --filter @owotv/db generate",
     "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
+    "db:migrate:remote": "bun --filter @owotv/web db:migrate:remote",
     "test": "bun --filter \"./packages/*\" test",
     "typecheck": "bun --filter \"./packages/*\" --filter \"./apps/cli\" typecheck",
-    "owotv": "tsx --env-file=apps/web/.env apps/cli/src/index.ts"
+    "owotv": "node apps/cli/bin/owotv.js"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",
