@@ -7,44 +7,14 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import Layout from '@/layouts/Layout.astro'
+import { listMonths, type MonthSummary } from '@/lib/data'
 import { cn } from '@/lib/utils'
-import { getCollection } from 'astro:content'
 
-const vods = await getCollection('vods')
-const sortedVods = vods.sort(
-  (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-)
-
-const vodsByYear = sortedVods.reduce(
-  (acc: Record<string, Record<string, typeof vods>>, vod) => {
-    const year = vod.data['Stream Date'].getFullYear().toString()
-    const monthYear = vod.data['Stream Date'].toLocaleString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    })
-
-    if (!acc[year]) {
-      acc[year] = {}
-    }
-    if (!acc[year][monthYear]) {
-      acc[year][monthYear] = []
-    }
-    acc[year][monthYear].push(vod)
-    return acc
-  },
-  {} as Record<string, Record<string, typeof vods>>,
-)
-
-const sortedYears = Object.keys(vodsByYear).sort(
-  (a, b) => parseInt(b) - parseInt(a),
-)
-
-const sortMonths = (months: [string, typeof vods][]) =>
-  months.sort(
-    (a, b) =>
-      b[1][0]!.data['Stream Date'].valueOf() -
-      a[1][0]!.data['Stream Date'].valueOf(),
-  )
+const vodsByYear = new Map<number, MonthSummary[]>()
+for (const month of await listMonths()) {
+  vodsByYear.set(month.year, [...(vodsByYear.get(month.year) ?? []), month])
+}
+const sortedYears = [...vodsByYear.keys()].sort((a, b) => b - a)
 
 const videoLabel = (count: number) =>
   `${count} ${count === 1 ? 'video' : 'videos'}`
@@ -73,7 +43,7 @@ const videoLabel = (count: number) =>
       <ol class="relative m-0 list-none">
         {
           sortedYears.map((year, yearIndex) => {
-            const months = sortMonths(Object.entries(vodsByYear[year]!))
+            const months = vodsByYear.get(year)!
             const isFirst = yearIndex === 0
             const isLast = yearIndex === sortedYears.length - 1
 
@@ -98,18 +68,18 @@ const videoLabel = (count: number) =>
 
                   <div class="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {
-                      months.map(([monthYear, monthVods]) => (
+                      months.map((month) => (
                         <Card className="transition-colors hover:border-border hover:bg-secondary/50">
                           <a
-                            href={`/collection/${monthYear.toLowerCase().replace(' ', '-')}`}
+                            href={`/collection/${month.slug}`}
                             class="block h-full"
                           >
                             <CardHeader className="space-y-0">
                               <CardTitle className="text-center text-2xl">
-                                {monthYear.split(' ')[0]}
+                                {month.label.split(' ')[0]}
                               </CardTitle>
                               <CardDescription className="text-center">
-                                {videoLabel(monthVods.length)}
+                                {videoLabel(month.vodCount)}
                               </CardDescription>
                             </CardHeader>
                           </a>

@@ -1,133 +1,25 @@
 import { Button, buttonVariants } from '@/components/ui/button'
 import { useWatchPlayerTime } from '@/hooks/useWatchPlayerTime'
-import { SITE } from '@/consts'
-import type {
-  ChatComment,
-  ChatData,
-  ChatReplayProps,
-  SevenTvObject,
-  SevenTvEmoteSet,
-} from './types'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Badge } from './Badge'
 import { ChatMessage } from './ChatMessage'
+import type { ChatReplayProps } from './types'
+import { useChatArchive } from './useChatArchive'
 
-export default function ChatReplay({
-  chatReplayURL,
-}: ChatReplayProps) {
-  const [comments, setComments] = useState<ChatComment[]>([])
-  const [visibleComments, setVisibleComments] = useState<ChatComment[]>([])
+export default function ChatReplay({ vodSlug }: ChatReplayProps) {
   const currentTime = useWatchPlayerTime()
+  const { visible, sevenTv } = useChatArchive(vodSlug, currentTime)
   const [userScrolled, setUserScrolled] = useState(false)
-  const [emoteData, setEmoteData] = useState<
-    Record<string, { type: 'twitch' | '7tv'; id: string }>
-  >({})
   const [isCollapsed, setIsCollapsed] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const MAX_VISIBLE_MESSAGES = 200
 
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const response = await fetch(chatReplayURL)
-        const data: ChatData = await response.json()
-
-        const emoteMap: Record<string, { type: 'twitch' | '7tv'; id: string }> =
-          {}
-        data.comments.forEach((comment) => {
-          comment.message.fragments?.forEach((fragment) => {
-            if (fragment.emoticon) {
-              emoteMap[fragment.text] = {
-                type: 'twitch',
-                id: fragment.emoticon.emoticon_id,
-              }
-            }
-          })
-        })
-
-        try {
-          const sevenTvResponse = await fetch('https://7tv.io/v4/gql', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: `
-                query($id: String!) {
-                  users {
-                    userByConnection(platform: TWITCH, platformId: $id) {
-                      style {
-                        activeEmoteSetId
-                      }
-                      emoteSets {
-                        id
-                        emotes {
-                          items {
-                            id 
-                            alias
-                          }
-                        }
-                      }
-                    } 
-                  }
-                }
-              `,
-              variables: {
-                id: SITE.TWITCH_USER_ID.toString(),
-              },
-            }),
-          })
-
-          const sevenTvData: SevenTvObject = await sevenTvResponse.json()
-          const activeEmoteSetId: string | undefined =
-            sevenTvData.data.users.userByConnection.style.activeEmoteSetId
-
-          if (activeEmoteSetId) {
-            const activeEmoteSet: SevenTvEmoteSet | undefined =
-              sevenTvData.data.users.userByConnection.emoteSets.find(
-                (obj) => obj.id === activeEmoteSetId,
-              )
-
-            if (activeEmoteSet) {
-              activeEmoteSet.emotes?.items?.forEach(
-                (emote: { id: string; alias: string }) => {
-                  emoteMap[emote.alias] = {
-                    type: '7tv',
-                    id: emote.id,
-                  }
-                },
-              )
-            }
-          }
-        } catch (error) {
-          console.error('[ChatReplay] Error fetching 7TV emotes:', error)
-        }
-
-        setEmoteData(emoteMap)
-        setComments(
-          data.comments.sort(
-            (a, b) => a.content_offset_seconds - b.content_offset_seconds,
-          ),
-        )
-      } catch (error) {
-        console.error('[ChatReplay] Error fetching comments:', error)
-      }
-    }
-    fetchComments()
-  }, [chatReplayURL])
-
-  useEffect(() => {
-    const visible = comments
-      .filter((comment) => comment.content_offset_seconds <= currentTime)
-      .slice(-MAX_VISIBLE_MESSAGES)
-    setVisibleComments(visible)
-
     if (chatContainerRef.current && !userScrolled) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
-  }, [currentTime, comments, userScrolled])
+  }, [visible, userScrolled])
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return
@@ -140,14 +32,14 @@ export default function ChatReplay({
   return (
     <div
       className={cn(
-        'relative flex flex-col border-l bg-background transition-all duration-300',
+        'bg-background relative flex flex-col border-l transition-all duration-300',
         isCollapsed ? 'w-12' : 'w-80',
       )}
     >
       <Button
         variant="outline"
         size="icon"
-        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm cursor-pointer"
+        className="border-border/60 bg-card absolute top-4 -left-2.5 z-10 size-6 cursor-pointer shadow-sm"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? (
@@ -181,42 +73,34 @@ export default function ChatReplay({
             className="grow space-y-2 overflow-y-auto p-4"
             onScroll={handleScroll}
           >
-            {visibleComments.map((comment) => (
+            {visible.map((msg) => (
               <div
-                key={comment._id}
-                className="wrap-break-word text-sm leading-tight"
+                key={msg.key}
+                className="text-sm leading-tight wrap-break-word"
               >
                 <span
                   className="font-semibold"
-                  style={{ color: comment.message.user_color || 'inherit' }}
+                  style={{ color: msg.user.color || 'inherit' }}
                 >
-                  {comment.message.user_badges?.map((badge) => (
+                  {msg.user.badges.map(([set, version]) => (
                     <Badge
-                      key={`${badge._id}-${badge.version}`}
-                      badgeId={badge._id}
-                      version={badge.version}
+                      key={`${set}-${version}`}
+                      badgeId={set}
+                      version={version}
                     />
                   ))}
-                  {comment.commenter.display_name}
+                  {msg.user.name}
                 </span>
                 {': '}
-                <ChatMessage
-                  fragments={
-                    comment.message.fragments || [
-                      { text: comment.message.body, emoticon: null },
-                    ]
-                  }
-                  userColor={comment.message.user_color || 'inherit'}
-                  emoteData={emoteData}
-                />
+                <ChatMessage fragments={msg.fragments} sevenTv={sevenTv} />
               </div>
             ))}
           </div>
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-4 py-4">
-          <MessageSquare className="h-5 w-5 text-muted-foreground" />
-          <span className="rotate-180 select-none font-semibold uppercase text-muted-foreground [writing-mode:vertical-lr]">
+          <MessageSquare className="text-muted-foreground h-5 w-5" />
+          <span className="text-muted-foreground rotate-180 font-semibold uppercase select-none [writing-mode:vertical-lr]">
             Chat Replay
           </span>
         </div>

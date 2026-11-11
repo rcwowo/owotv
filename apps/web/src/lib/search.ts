@@ -306,14 +306,6 @@ export function slugify(value: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-export function gameSlug(game: string): string {
-  return slugify(game || 'other')
-}
-
-export function monthYearSlug(monthYear: string): string {
-  return monthYear.toLowerCase().replace(' ', '-')
-}
-
 export function buildDateTokens(date: Date): string[] {
   const year = date.getFullYear().toString()
   const monthNum = (date.getMonth() + 1).toString()

@@ -2,42 +2,12 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import Layout from '@/layouts/Layout.astro'
 import VodCard from '@/components/vods/VodCard.astro'
-import { getCollection } from 'astro:content'
+import { listVods, parseMonthSlug } from '@/lib/data'
 
-export async function getStaticPaths() {
-  const vods = await getCollection('vods')
-  const sortedVods = vods.sort(
-    (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-  )
-
-  // Get unique month-years
-  const monthYears = [
-    ...new Set(
-      sortedVods.map((vod) =>
-        vod.data['Stream Date'].toLocaleString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        }),
-      ),
-    ),
-  ]
-
-  return monthYears.map((monthYear) => {
-    const monthVods = sortedVods.filter(
-      (vod) =>
-        vod.data['Stream Date'].toLocaleString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        }) === monthYear,
-    )
-    return {
-      params: { monthYear: monthYear.toLowerCase().replace(' ', '-') },
-      props: { monthYear, vods: monthVods },
-    }
-  })
-}
-
-const { monthYear, vods } = Astro.props
+const range = parseMonthSlug(Astro.params.monthYear ?? '')
+const vods = range ? await listVods({ from: range.from, to: range.to }) : []
+if (!range || vods.length === 0) return new Response(null, { status: 404 })
+const monthYear = range.label
 ---
 
 <Layout title={`${monthYear} VODs`} description={`Archive of Twitch streams from ${monthYear}`}>

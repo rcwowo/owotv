@@ -2,18 +2,11 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import EpisodeCard from '@/components/shows/EpisodeCard.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getShows } from '@/lib/shows'
+import { getShow } from '@/lib/shows'
 import { Icon } from 'astro-icon/components'
 
-export async function getStaticPaths() {
-  const shows = await getShows()
-  return shows.map((show) => ({
-    params: { showId: show.id },
-    props: { show },
-  }))
-}
-
-const { show } = Astro.props
+const show = await getShow(Astro.params.showId ?? '')
+if (!show) return new Response(null, { status: 404 })
 ---
 
 <Layout title={show.title} description={show.description}>

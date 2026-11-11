@@ -1,29 +1,25 @@
-import { getCollection } from 'astro:content'
+import { listGames, listMonths, listVods } from '@/lib/data'
 import { getShows } from '@/lib/shows'
 import {
   buildDateTokens,
   buildSearchBlob,
-  gameSlug,
-  monthYearSlug,
   tokenizeField,
   type SearchIndexItem,
 } from '@/lib/search'
 
-export const prerender = true
-
 export async function GET() {
-  const vods = await getCollection('vods')
-  const shows = await getShows()
+  const [vods, games, months, shows] = await Promise.all([
+    listVods(),
+    listGames(),
+    listMonths(),
+    getShows(),
+  ])
   const index: SearchIndexItem[] = []
 
-  const sortedVods = [...vods].sort(
-    (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-  )
-
-  for (const vod of sortedVods) {
-    const title = vod.data['Title']
-    const game = vod.data['Game'] || 'Other'
-    const date = vod.data['Stream Date']
+  for (const vod of vods) {
+    const title = vod.title
+    const game = vod.game?.name ?? 'Other'
+    const date = vod.streamedAt
     const dateISO = date.toISOString()
     const dateDisplay = date.toLocaleDateString('en-US', {
       month: 'long',
@@ -40,7 +36,7 @@ export async function GET() {
       title,
       subtitle: `${game} · ${dateDisplay}`,
       category: 'VOD',
-      href: `/watch/${vod.id}`,
+      href: `/watch/${vod.slug}`,
       searchText: blob.text,
       searchCompact: blob.compact,
       _w: { title: titleTokens, game: gameTokens, date: dateTokens },
@@ -48,17 +44,7 @@ export async function GET() {
     })
   }
 
-  const games = sortedVods.reduce(
-    (acc, vod) => {
-      const game = vod.data['Game'] || 'Other'
-      if (!acc.has(game)) acc.set(game, 0)
-      acc.set(game, acc.get(game)! + 1)
-      return acc
-    },
-    new Map<string, number>(),
-  )
-
-  for (const [game, count] of games) {
+  for (const { name: game, slug, vodCount: count } of games) {
     const titleTokens = tokenizeField(game)
     const blob = buildSearchBlob([game, 'game', 'category', 'streams'])
 
@@ -67,7 +53,7 @@ export async function GET() {
       title: game,
       subtitle: `${count} stream${count === 1 ? '' : 's'}`,
       category: 'Game',
-      href: `/games/${gameSlug(game)}`,
+      href: `/games/${slug}`,
       searchText: blob.text,
       searchCompact: blob.compact,
       _w: { title: titleTokens, game: titleTokens },
@@ -131,16 +117,7 @@ export async function GET() {
     }
   }
 
-  const monthYears = new Map<string, number>()
-  for (const vod of sortedVods) {
-    const monthYear = vod.data['Stream Date'].toLocaleString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    })
-    monthYears.set(monthYear, (monthYears.get(monthYear) ?? 0) + 1)
-  }
-
-  for (const [monthYear, count] of monthYears) {
+  for (const { label: monthYear, slug, vodCount: count } of months) {
     const [monthName, year] = monthYear.split(' ')
     const dateTokens = buildDateTokens(
       new Date(`${monthName} 1, ${year}`),
@@ -161,7 +138,7 @@ export async function GET() {
       title: monthYear,
       subtitle: `${count} video${count === 1 ? '' : 's'}`,
       category: 'Collection',
-      href: `/collection/${monthYearSlug(monthYear)}`,
+      href: `/collection/${slug}`,
       searchText: blob.text,
       searchCompact: blob.compact,
       _w: { title: titleTokens, date: dateTokens },

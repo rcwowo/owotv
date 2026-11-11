@@ -10,55 +10,25 @@ import GameCard from '@/components/vods/GameCard.astro'
 import VodCard from '@/components/vods/VodCard.astro'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
+import { listGames, listVods } from '@/lib/data'
 import { formatStreamDate } from '@/lib/date'
 import { getShows } from '@/lib/shows'
 import { cn } from '@/lib/utils'
 import { Icon } from 'astro-icon/components'
-import { getCollection } from 'astro:content'
 
-const allVods = await getCollection('vods')
-const sortedVods = allVods.sort(
-  (a, b) => b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-)
-
-const latestVods = sortedVods.slice(0, 12)
-const featuredVod = sortedVods[0]
-const shows = await getShows()
-
-const vodsByGame = sortedVods.reduce(
-  (
-    acc: Record<
-      string,
-      { vods: typeof sortedVods; coverUrl: string; latestDate: Date }
-    >,
-    vod,
-  ) => {
-    const game = vod.data['Game'] || 'Other'
-    if (!acc[game]) {
-      acc[game] = {
-        vods: [],
-        coverUrl: vod.data['Game Cover URL'] || '',
-        latestDate: vod.data['Stream Date'],
-      }
-    }
-    acc[game].vods.push(vod)
-    return acc
-  },
-  {} as Record<
-    string,
-    { vods: typeof sortedVods; coverUrl: string; latestDate: Date }
-  >,
-)
-
-const recentGames = Object.entries(vodsByGame)
-  .sort((a, b) => b[1].latestDate.valueOf() - a[1].latestDate.valueOf())
-  .slice(0, 12)
+const [latestVods, games, shows] = await Promise.all([
+  listVods({}, { limit: 12 }),
+  listGames(),
+  getShows(),
+])
+const featuredVod = latestVods[0]
+const recentGames = games.slice(0, 12)
 ---
 
 <Layout
   title="Home"
   description={SITE.DESCRIPTION}
-  image={featuredVod?.data['Thumbnail URL']}
+  image={featuredVod?.thumbnailUrl}
   headerOverlay
   className="gap-y-0"
 >
@@ -67,7 +37,7 @@ const recentGames = Object.entries(vodsByGame)
       <section class="relative h-[min(52vh,32rem)] min-h-80 max-h-128">
         <div class="absolute inset-0 overflow-hidden">
           <img
-            src={featuredVod.data['Thumbnail URL']}
+            src={featuredVod.thumbnailUrl}
             alt=""
             class="h-full w-full scale-105 object-cover blur-[2px]"
             fetchpriority="high"
@@ -80,14 +50,14 @@ const recentGames = Object.entries(vodsByGame)
           <Container class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div class="max-w-3xl space-y-4">
               <h1 class="font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-[2.5rem]">
-                {featuredVod.data['Title']}
+                {featuredVod.title}
               </h1>
               <p class="text-sm text-muted-foreground">
-                Streamed on {formatStreamDate(featuredVod.data['Stream Date'])} •{' '}
-                {featuredVod.data['Duration']}
+                Streamed on {formatStreamDate(featuredVod.streamedAt)} •{' '}
+                {featuredVod.duration}
               </p>
               <a
-                href={`/watch/${featuredVod.id}`}
+                href={`/watch/${featuredVod.slug}`}
                 class={cn(
                   buttonVariants({ variant: 'secondary', size: 'lg' }),
                   'h-10 gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-lg hover:bg-primary/90 sm:h-11 sm:px-6',
@@ -99,14 +69,14 @@ const recentGames = Object.entries(vodsByGame)
             </div>
 
             {
-              featuredVod.data['Game Cover URL'] && (
+              featuredVod.game?.coverUrl && (
                 <a
-                  href={`/games/${(featuredVod.data['Game'] || 'Other').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                  href={`/games/${featuredVod.game.slug}`}
                   class="group hidden shrink-0 sm:block"
                 >
                   <img
-                    src={featuredVod.data['Game Cover URL']}
-                    alt={featuredVod.data['Game']}
+                    src={featuredVod.game.coverUrl}
+                    alt={featuredVod.game.name}
                     class="h-36 w-auto rounded-xl border border-white/10 shadow-2xl transition-transform duration-300 group-hover:scale-[1.03] lg:h-40"
                     width="120"
                     height="176"
@@ -145,12 +115,13 @@ const recentGames = Object.entries(vodsByGame)
 
     <ContentRow title="Recently Played Games" viewAllHref="/games">
       {
-        recentGames.map(([game, { vods: gameVods, coverUrl }]) => (
+        recentGames.map((game) => (
           <div class="w-28 shrink-0 sm:w-32">
             <GameCard
-              game={game}
-              coverUrl={coverUrl}
-              vodCount={gameVods.length}
+              slug={game.slug}
+              game={game.name}
+              coverUrl={game.coverUrl ?? ''}
+              vodCount={game.vodCount}
             />
           </div>
         ))

@@ -14,7 +14,7 @@
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "owotv",
+      "bucket_name": "owotv-data",
     },
   ],
 }

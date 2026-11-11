@@ -4,25 +4,21 @@ import PaginationComponent from '@/components/ui/pagination'
 import VodCard from '@/components/vods/VodCard.astro'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import type { PaginateFunction } from 'astro'
-import { getCollection, type CollectionEntry } from 'astro:content'
+import { countVods, listVods } from '@/lib/data'
 
-export async function getStaticPaths({
-  paginate,
-}: {
-  paginate: PaginateFunction
-}) {
-  const allVods: CollectionEntry<'vods'>[] = await getCollection('vods')
-  return paginate(
-    allVods.sort(
-      (a, b) =>
-        b.data['Stream Date'].valueOf() - a.data['Stream Date'].valueOf(),
-    ),
-    { pageSize: SITE.VODS_PER_PAGE },
-  )
+const pageParam = Astro.params.page
+const currentPage = pageParam === undefined ? 1 : Number(pageParam)
+if (!Number.isInteger(currentPage) || currentPage < 1 || pageParam === '1') {
+  return new Response(null, { status: 404 })
 }
 
-const { page } = Astro.props
+const pageSize = SITE.VODS_PER_PAGE
+const [vods, total] = await Promise.all([
+  listVods({}, { limit: pageSize, offset: (currentPage - 1) * pageSize }),
+  countVods(),
+])
+const lastPage = Math.max(1, Math.ceil(total / pageSize))
+if (currentPage > lastPage) return new Response(null, { status: 404 })
 ---
 
 <Layout title="Browse" description="Archive of all Twitch streams">
@@ -30,20 +26,20 @@ const { page } = Astro.props
     <div class="py-4 space-y-4">
       <Breadcrumbs
         items={[
-          { label: `Page ${page.currentPage}`, icon: 'lucide:folder-open' }
+          { label: `Page ${currentPage}`, icon: 'lucide:folder-open' }
         ]}
       />
       <h1 class="text-4xl font-bold tracking-tight">VODs</h1>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {page.data.map((vod) => <VodCard vod={vod} />)}
+      {vods.map((vod) => <VodCard vod={vod} />)}
     </div>
 
     <div class="py-4">
       <PaginationComponent
-        currentPage={page.currentPage}
-        totalPages={page.lastPage}
+        currentPage={currentPage}
+        totalPages={lastPage}
         baseUrl="/vods/"
         client:load
       />

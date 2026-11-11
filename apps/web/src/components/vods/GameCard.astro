@@ -1,16 +1,17 @@
 ---
 interface Props {
+  slug: string
   game: string
   coverUrl: string
   vodCount: number
 }
 
-const { game, coverUrl, vodCount } = Astro.props
+const { slug, game, coverUrl, vodCount } = Astro.props
 ---
 
 <div class="relative aspect-3/4">
   <a
-    href={`/games/${game.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+    href={`/games/${slug}`}
     class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   >
     {

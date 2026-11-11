@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export * from './client'
+
 export const CHAT_FORMAT_VERSION = 1
 export const MIN_SEGMENT_SECONDS = 300
 export const MAX_SEGMENT_SECONDS = 3600
@@ -16,9 +18,6 @@ export const chatManifestKey = (vodSlug: string) =>
   `chat/${vodSlug}/manifest.json`
 export const chatSegmentKey = (vodSlug: string, segment: number) =>
   `chat/${vodSlug}/${segment}.json`
-
-export const segmentForTime = (seconds: number, segmentSeconds: number) =>
-  Math.max(0, Math.floor(seconds / segmentSeconds))
 
 export const chatFragment = z.union([
   z.string(),
@@ -70,19 +69,3 @@ export const chatManifest = z.object({
   emoteSet: z.string().nullable().default(null),
 })
 export type ChatManifest = z.infer<typeof chatManifest>
-
-export interface ResolvedChatMessage {
-  key: string
-  offset: number
-  user: ChatUser
-  fragments: ChatFragment[]
-}
-
-export function resolveSegment(seg: ChatSegment): ResolvedChatMessage[] {
-  return seg.messages.map(([offset, userIndex, fragments], i) => ({
-    key: `${seg.segment}:${i}`,
-    offset,
-    user: seg.users[userIndex] ?? { login: '', name: 'unknown', badges: [] },
-    fragments,
-  }))
-}

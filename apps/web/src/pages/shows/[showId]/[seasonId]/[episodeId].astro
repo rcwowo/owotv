@@ -3,30 +3,13 @@ import { buttonVariants } from '@/components/ui/button'
 import { EpisodePlaylist } from '@/components/shows/EpisodePlaylist'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubeVideoID } from '@/lib/utils'
-import { getShows } from '@/lib/shows'
+import { getShow } from '@/lib/shows'
 import { Icon } from 'astro-icon/components'
 
-export async function getStaticPaths() {
-  const shows = await getShows()
-  const paths = []
-  for (const show of shows) {
-    for (const season of show.seasons) {
-      for (const episode of season.episodes) {
-        paths.push({
-          params: {
-            showId: show.id,
-            seasonId: season.id,
-            episodeId: episode.id,
-          },
-          props: { show, season, episode },
-        })
-      }
-    }
-  }
-  return paths
-}
-
-const { show, season, episode } = Astro.props
+const show = await getShow(Astro.params.showId ?? '')
+const season = show?.seasons.find((s) => s.id === Astro.params.seasonId)
+const episode = season?.episodes.find((e) => e.id === Astro.params.episodeId)
+if (!show || !season || !episode) return new Response(null, { status: 404 })
 const youtubeId = getYouTubeVideoID(episode.videoUrl)
 ---
 

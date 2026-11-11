@@ -11,7 +11,6 @@ export type Site = {
   EMAIL: string
   VODS_PER_PAGE: number
   SITEURL: string
-  TWITCH_USER_ID: number
 }
 
 export type Link = {
@@ -26,7 +25,6 @@ export const SITE: Site = {
   EMAIL: 'riley@rcw.lol',
   VODS_PER_PAGE: 21,
   SITEURL: 'https://tv.rcw.lol',
-  TWITCH_USER_ID: 194814599
 }
 
 export const NAV_LINKS: Link[] = [

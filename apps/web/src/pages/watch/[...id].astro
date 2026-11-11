@@ -4,41 +4,22 @@ import WatchShareButton from '@/components/vods/WatchShareButton'
 import YouTubeWatchPlayer from '@/components/vods/YouTubeWatchPlayer'
 import { buttonVariants } from '@/components/ui/button'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
-import { getYouTubeVideoID } from '@/lib/utils'
 import { getYouTubePlayerElementId } from '@/lib/youtube-api'
 import { Icon } from 'astro-icon/components'
-import { getCollection, type CollectionEntry } from 'astro:content'
+import { getVod } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
-export async function getStaticPaths() {
-  const vods: CollectionEntry<'vods'>[] = await getCollection('vods')
-  return vods.map((vod) => ({
-    params: { id: vod.id },
-    props: { vod },
-  }))
-}
+const vod = await getVod(Astro.params.id ?? '')
+if (!vod) return new Response(null, { status: 404 })
 
-const { vod } = Astro.props
-const youtubeId = getYouTubeVideoID(vod.data['VOD URL'])
-
-const { S3_BASE_URL } = import.meta.env
-const chatLogPath = vod.data['Chat Replay Path']
-let chatReplayUrl: string | undefined
-
-if (chatLogPath && S3_BASE_URL) {
-  chatReplayUrl = new URL(
-    chatLogPath.replace(/^\//, ''),
-    S3_BASE_URL.endsWith('/') ? S3_BASE_URL : `${S3_BASE_URL}/`,
-  ).href
-}
-
-const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
+const youtubeId = vod.youtubeId
+const playerElementId = getYouTubePlayerElementId(youtubeId)
 ---
 
 <MinimalLayout
-  title={vod.data['Title']}
-  description={`Stream VOD: ${vod.data['Title']}`}
-  image={vod.data['Thumbnail URL']}
+  title={vod.title}
+  description={`Stream VOD: ${vod.title}`}
+  image={vod.thumbnailUrl}
 >
   <main class="flex h-screen flex-col bg-background">
     <!-- Top Navigation Bar -->
@@ -55,10 +36,10 @@ const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
       </div>
       <div class="flex items-center gap-4 text-right">
         <div class="max-w-[70vw]">
-          <h1 class="truncate text-sm font-semibold">{vod.data['Title']}</h1>
+          <h1 class="truncate text-sm font-semibold">{vod.title}</h1>
           <p class="truncate text-xs text-muted-foreground">
-            {vod.data['Game']} • {
-              vod.data['Stream Date'].toLocaleString('en-US', {
+            {vod.game?.name ?? 'Other'} • {
+              vod.streamedAt.toLocaleString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
@@ -66,13 +47,17 @@ const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
             }
           </p>
         </div>
-        <img
-          src={vod.data['Game Cover URL']}
-          alt={`Game cover for ${vod.data['Game']}`}
-          width="32"
-          height="32"
-          class="size-8 rounded object-cover"
-        />
+        {
+          vod.game?.coverUrl && (
+            <img
+              src={vod.game.coverUrl}
+              alt={`Game cover for ${vod.game.name}`}
+              width="32"
+              height="32"
+              class="size-8 rounded object-cover"
+            />
+          )
+        }
       </div>
     </div>
 
@@ -97,9 +82,7 @@ const playerElementId = youtubeId ? getYouTubePlayerElementId(youtubeId) : ''
 
       <!-- Chat Replay -->
       {
-        chatReplayUrl && (
-          <ChatReplay client:load chatReplayURL={chatReplayUrl} />
-        )
+        vod.hasChat && <ChatReplay client:load vodSlug={vod.slug} />
       }
     </div>
   </main>
