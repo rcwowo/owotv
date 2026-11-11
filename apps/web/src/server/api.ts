@@ -34,6 +34,7 @@ import {
 import { eq } from 'drizzle-orm'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
+import { docsHtml, openApiSpec } from './openapi'
 import { ZodError } from 'zod'
 
 export const PURGE_HEADER = 'X-Owotv-Purge'
@@ -143,6 +144,10 @@ async function readJson(c: Context<ApiEnv>): Promise<unknown> {
     throw new HttpError(400, 'Request body is not valid JSON')
   }
 }
+
+app.get('/', (c) => c.redirect('/api/docs'))
+app.get('/docs', (c) => c.html(docsHtml))
+app.get('/openapi.json', (c) => c.json(openApiSpec(new URL(c.req.url).origin)))
 
 app.get('/chat/:vod{[0-9a-z]+}/:file{(manifest|[0-9]+)\\.json}', (c) => {
   const { vod, file } = c.req.param()

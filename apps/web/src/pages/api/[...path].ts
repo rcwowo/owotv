@@ -1,4 +1,9 @@
-import { CHAT_CACHE_TAG, chatCacheTag, EMOTES_CACHE_TAG } from '@/lib/cache'
+import {
+  CHAT_CACHE_TAG,
+  chatCacheTag,
+  CONTENT_CACHE_TAG,
+  EMOTES_CACHE_TAG,
+} from '@/lib/cache'
 import app, { PURGE_HEADER } from '@/server/api'
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
@@ -29,6 +34,8 @@ export const ALL: APIRoute = async ({ request, locals, cache, url }) => {
     })
   } else if (kind === 'emotes') {
     cache.set({ maxAge: 31536000, tags: [EMOTES_CACHE_TAG] })
+  } else if (kind === 'docs' || kind === 'openapi.json') {
+    cache.set({ maxAge: 300, swr: 86400, tags: [CONTENT_CACHE_TAG] })
   }
   return response
 }

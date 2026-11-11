@@ -1,5 +1,6 @@
 import type {
   ApiChannel,
+  ApiMe,
   ApiError,
   ApiVod,
   ChannelInput,
@@ -73,10 +74,7 @@ export class ApiClient {
   }
 
   whoami() {
-    return this.request<{ name: string; role: string; channel: string | null }>(
-      'GET',
-      '/me',
-    )
+    return this.request<ApiMe>('GET', '/me')
   }
 
   listChannels() {

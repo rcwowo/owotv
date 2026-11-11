@@ -36,6 +36,7 @@ export const FOOTER_LINKS: Link[] = [
   { href: 'https://github.com/rcwowo/owotv', label: 'Source Code' },
   { href: 'riley@rcw.lol', label: 'Support Email' },
   { href: '/rss.xml', label: 'RSS' },
+  { href: '/api/docs', label: 'API' },
 ]
 
 export const RCW_URL = 'https://rcw.lol'
