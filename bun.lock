@@ -4,6 +4,16 @@
   "workspaces": {
     "": {
       "name": "vod-archive",
+      "devDependencies": {
+        "prettier": "^3.9.10",
+        "prettier-plugin-astro": "^1.1.2",
+        "prettier-plugin-astro-organize-imports": "^0.4.14",
+        "prettier-plugin-tailwindcss": "^0.8.1",
+      },
+    },
+    "apps/web": {
+      "name": "@owotv/web",
+      "version": "2.2.1",
       "dependencies": {
         "@astrojs/check": "^0.9.12",
         "@astrojs/react": "^7.1.1",
@@ -36,10 +46,6 @@
       },
       "devDependencies": {
         "@tailwindcss/typography": "^0.5.20",
-        "prettier": "^3.9.10",
-        "prettier-plugin-astro": "^1.1.2",
-        "prettier-plugin-astro-organize-imports": "^0.4.14",
-        "prettier-plugin-tailwindcss": "^0.8.1",
       },
     },
   },
@@ -238,6 +244,8 @@
     "@nodable/entities": ["@nodable/entities@3.1.0", "", {}, "sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ=="],
 
     "@oslojs/encoding": ["@oslojs/encoding@1.1.0", "", {}, "sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ=="],
+
+    "@owotv/web": ["@owotv/web@workspace:apps/web"],
 
     "@oxc-project/types": ["@oxc-project/types@0.155.0", "", {}, "sha512-SeE8JPwW1xs1tHeNycjUtUBdhorRa8o4jlvjwk49R7/Z291i+4DQa7JJIgOm/TaYQZx+QrPQbVJ/9c8dMIZN8Q=="],
 

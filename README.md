@@ -35,7 +35,7 @@ git clone https://github.com/rcwowo/owotv
 cd owotv && bun install
 
 # Setup the .env file (you'll have to provide your own keys and such)
-cp .env.example .env
+cp apps/web/.env.example apps/web/.env
 
 # Run the test server
 bun dev
