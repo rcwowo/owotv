@@ -22,9 +22,24 @@ export interface TwitchDownloaderComment {
   }
 }
 
+export interface TwitchDownloaderChapter {
+  startMilliseconds: number
+  gameId?: string | null
+  gameDisplayName?: string | null
+  gameBoxArtUrl?: string | null
+}
+
 export interface TwitchDownloaderChat {
   comments: TwitchDownloaderComment[]
-  video?: { length?: number }
+  streamer?: { name: string; login?: string; id: number | string }
+  video?: {
+    id?: string
+    title?: string
+    created_at?: string
+    length?: number
+    game?: string | null
+    chapters?: TwitchDownloaderChapter[]
+  }
 }
 
 export interface ChatArchive {

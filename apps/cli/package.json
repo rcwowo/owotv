@@ -13,6 +13,7 @@
   "dependencies": {
     "@owotv/core": "workspace:*",
     "@owotv/db": "workspace:*",
+    "@owotv/shared": "workspace:*",
     "jsonc-parser": "^3.3.1",
     "wrangler": "^4.160.1"
   },

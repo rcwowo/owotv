@@ -46,27 +46,38 @@ export async function fetchSevenTvEmotes(twitchId: string): Promise<EmoteSet> {
   return emotes
 }
 
+export async function sha256Hex(text: string) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(text),
+  )
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+export async function encodeEmoteSet(
+  emotes: EmoteSet,
+): Promise<{ hash: string; body: string } | null> {
+  const entries = Object.entries(emotes).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )
+  if (!entries.length) return null
+  const body = JSON.stringify(Object.fromEntries(entries))
+  return { hash: (await sha256Hex(body)).slice(0, 16), body }
+}
+
 export async function writeEmoteSet(
   bucket: BucketLike,
   emotes: EmoteSet,
 ): Promise<string | null> {
-  const sorted = Object.fromEntries(
-    Object.entries(emotes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-  )
-  if (!Object.keys(sorted).length) return null
-  const body = JSON.stringify(sorted)
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(body),
-  )
-  const hash = [...new Uint8Array(digest).slice(0, 8)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-  const key = emoteSetKey(hash)
+  const encoded = await encodeEmoteSet(emotes)
+  if (!encoded) return null
+  const key = emoteSetKey(encoded.hash)
   if (!(await bucket.head(key))) {
-    await bucket.put(key, body, {
+    await bucket.put(key, encoded.body, {
       httpMetadata: { contentType: 'application/json' },
     })
   }
-  return hash
+  return encoded.hash
 }

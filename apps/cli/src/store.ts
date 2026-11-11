@@ -31,12 +31,18 @@ export async function openStore(
     await writeFile(path, JSON.stringify(config))
   }
 
+  const cleanup = () =>
+    path !== configPath ? rm(path, { force: true }) : Promise.resolve()
   const proxy = await getPlatformProxy<{
     DB: unknown
     BUCKET: Store['bucket']
   }>({
     configPath: path,
+    envFiles: [],
     persist: { path: join(webDir, '.wrangler', 'state', 'v3') },
+  }).catch(async (err) => {
+    await cleanup()
+    throw err
   })
 
   return {
@@ -44,7 +50,7 @@ export async function openStore(
     bucket: proxy.env.BUCKET,
     dispose: async () => {
       await proxy.dispose()
-      if (path !== configPath) await rm(path, { force: true })
+      await cleanup()
     },
   }
 }
