@@ -21,13 +21,19 @@
     "dev": "bun --filter @owotv/web dev",
     "build": "bun --filter @owotv/web build",
     "preview": "bun --filter @owotv/web preview",
-    "prettier": "prettier --write ."
+    "prettier": "prettier --write .",
+    "db:generate": "bun --filter @owotv/db generate",
+    "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
+    "test": "bun --filter \"./packages/*\" test",
+    "typecheck": "bun --filter \"./packages/*\" typecheck"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.4",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "prettier-plugin-astro-organize-imports": "^0.4.14",
-    "prettier-plugin-tailwindcss": "^0.8.1"
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "postcss-selector-parser": "^7.1.7"
