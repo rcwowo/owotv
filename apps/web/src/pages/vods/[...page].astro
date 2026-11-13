@@ -4,6 +4,7 @@ import PaginationComponent from '@/components/ui/pagination'
 import VodCard from '@/components/vods/VodCard.astro'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
+import { isMultiChannel } from '@/lib/channels'
 import { countVods, listVods } from '@/lib/data'
 
 const pageParam = Astro.params.page
@@ -13,9 +14,10 @@ if (!Number.isInteger(currentPage) || currentPage < 1 || pageParam === '1') {
 }
 
 const pageSize = SITE.VODS_PER_PAGE
-const [vods, total] = await Promise.all([
+const [vods, total, multiChannel] = await Promise.all([
   listVods({}, { limit: pageSize, offset: (currentPage - 1) * pageSize }),
   countVods(),
+  isMultiChannel(),
 ])
 const lastPage = Math.max(1, Math.ceil(total / pageSize))
 if (currentPage > lastPage) return new Response(null, { status: 404 })
@@ -33,7 +35,7 @@ if (currentPage > lastPage) return new Response(null, { status: 404 })
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {vods.map((vod) => <VodCard vod={vod} />)}
+      {vods.map((vod) => <VodCard vod={vod} showChannel={multiChannel} />)}
     </div>
 
     <div class="py-4">

@@ -1,11 +1,21 @@
 import type {
   ApiChannel,
+  ApiEpisode,
+  ApiShow,
+  ApiShowSummary,
+  CreateEpisodeInput,
+  CreateSeasonInput,
+  CreateShowInput,
+  UpdateEpisodeInput,
+  UpdateSeasonInput,
+  UpdateShowInput,
   ApiMe,
   ApiError,
   ApiVod,
   ChannelInput,
   ChatManifest,
   CreateVodInput,
+  UpdateChannelInput,
   UpdateVodInput,
 } from '@owotv/shared'
 
@@ -81,8 +91,32 @@ export class ApiClient {
     return this.request<ApiChannel[]>('GET', '/channels')
   }
 
+  getChannel(slug: string) {
+    return this.request<ApiChannel>(
+      'GET',
+      `/channels/${encodeURIComponent(slug)}`,
+    )
+  }
+
   createChannel(input: ChannelInput) {
     return this.request<ApiChannel>('POST', '/channels', { json: input })
+  }
+
+  updateChannel(slug: string, input: UpdateChannelInput) {
+    return this.request<ApiChannel>(
+      'PATCH',
+      `/channels/${encodeURIComponent(slug)}`,
+      { json: input },
+    )
+  }
+
+  /** Fails with 409 if the channel has content, unless `moveTo` is given. */
+  deleteChannel(slug: string, opts: { moveTo?: string } = {}) {
+    const q = opts.moveTo ? `?moveTo=${encodeURIComponent(opts.moveTo)}` : ''
+    return this.request<void>(
+      'DELETE',
+      `/channels/${encodeURIComponent(slug)}${q}`,
+    )
   }
 
   listVods(opts: { channel?: string; limit?: number; offset?: number } = {}) {
@@ -109,6 +143,82 @@ export class ApiClient {
 
   deleteVod(slug: string) {
     return this.request<void>('DELETE', `/vods/${encodeURIComponent(slug)}`)
+  }
+
+  listShows(opts: { channel?: string } = {}) {
+    const q = new URLSearchParams()
+    if (opts.channel) q.set('channel', opts.channel)
+    return this.request<ApiShowSummary[]>('GET', `/shows?${q}`)
+  }
+
+  getShow(slug: string) {
+    return this.request<ApiShow>('GET', `/shows/${encodeURIComponent(slug)}`)
+  }
+
+  createShow(input: CreateShowInput) {
+    return this.request<ApiShow>('POST', '/shows', { json: input })
+  }
+
+  updateShow(slug: string, input: UpdateShowInput) {
+    return this.request<ApiShow>(
+      'PATCH',
+      `/shows/${encodeURIComponent(slug)}`,
+      { json: input },
+    )
+  }
+
+  deleteShow(slug: string) {
+    return this.request<void>('DELETE', `/shows/${encodeURIComponent(slug)}`)
+  }
+
+  createSeason(show: string, input: CreateSeasonInput) {
+    return this.request<ApiShow>(
+      'POST',
+      `/shows/${encodeURIComponent(show)}/seasons`,
+      { json: input },
+    )
+  }
+
+  updateSeason(show: string, season: string, input: UpdateSeasonInput) {
+    return this.request<ApiShow>(
+      'PATCH',
+      `/shows/${encodeURIComponent(show)}/seasons/${encodeURIComponent(season)}`,
+      { json: input },
+    )
+  }
+
+  deleteSeason(show: string, season: string) {
+    return this.request<void>(
+      'DELETE',
+      `/shows/${encodeURIComponent(show)}/seasons/${encodeURIComponent(season)}`,
+    )
+  }
+
+  createEpisode(show: string, season: string, input: CreateEpisodeInput) {
+    return this.request<ApiEpisode>(
+      'POST',
+      `/shows/${encodeURIComponent(show)}/seasons/${encodeURIComponent(season)}/episodes`,
+      { json: input },
+    )
+  }
+
+  getEpisode(slug: string) {
+    return this.request<ApiEpisode>(
+      'GET',
+      `/episodes/${encodeURIComponent(slug)}`,
+    )
+  }
+
+  updateEpisode(slug: string, input: UpdateEpisodeInput) {
+    return this.request<ApiEpisode>(
+      'PATCH',
+      `/episodes/${encodeURIComponent(slug)}`,
+      { json: input },
+    )
+  }
+
+  deleteEpisode(slug: string) {
+    return this.request<void>('DELETE', `/episodes/${encodeURIComponent(slug)}`)
   }
 
   putEmoteSet(hash: string, body: string) {

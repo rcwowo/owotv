@@ -5,6 +5,11 @@ import Logo from '@/components/Logo.astro'
 import SiteSearch from '@/components/SiteSearch.astro'
 import MobileMenu from '@/components/ui/mobile-menu'
 import { NAV_LINKS } from '@/consts'
+import { isMultiChannel } from '@/lib/channels'
+
+const links = (await isMultiChannel())
+  ? [{ href: '/channels', label: 'Channels' }, ...NAV_LINKS]
+  : NAV_LINKS
 
 ---
 
@@ -16,13 +21,13 @@ import { NAV_LINKS } from '@/consts'
   <Container>
     <nav class="header-nav flex h-14 items-center justify-between gap-4">
       <div class="header-nav-left flex min-w-0 items-center gap-6">
-        <MobileMenu client:load />
+        <MobileMenu links={links} client:load />
 
         <Logo class="header-logo" />
 
         <div class="hidden items-center gap-1 sm:flex">
           {
-            NAV_LINKS.map((item) => (
+            links.map((item) => (
               <Link
                 href={item.href}
                 data-nav-link

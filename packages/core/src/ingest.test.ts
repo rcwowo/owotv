@@ -29,6 +29,9 @@ const channel = (slug: string, twitchId: string | null): ApiChannel => ({
   displayName: slug,
   twitchId,
   avatarUrl: null,
+  bannerUrl: null,
+  description: '',
+  links: [],
 })
 
 describe('readChatFileMeta', () => {

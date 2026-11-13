@@ -208,8 +208,15 @@ export async function createVod(
   return (await getApiVod(db, row!.slug))!
 }
 
-export async function updateVod(db: Db, slug: string, input: UpdateVodInput) {
+/** `channelId` is the channel to move the VOD to, already access-checked. */
+export async function updateVod(
+  db: Db,
+  slug: string,
+  input: UpdateVodInput,
+  channelId?: number,
+) {
   const patch: Partial<typeof vods.$inferInsert> = {}
+  if (channelId !== undefined) patch.channelId = channelId
   if (input.title !== undefined) patch.title = input.title
   if (input.streamDate !== undefined) {
     patch.streamedAt = fromDateString(input.streamDate)

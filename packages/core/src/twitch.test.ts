@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test'
 import { readChatFileMeta } from './ingest'
 import {
+  channelSyncFromTwitch,
   downloadTwitchChat,
   parseTwitchVodId,
   type TwitchFetch,
@@ -146,4 +147,57 @@ test('downloadTwitchChat handles a VOD with no chat', async () => {
   })
   expect(chat.comments).toEqual([])
   expect(chat.video?.length).toBe(300)
+})
+
+test('channelSyncFromTwitch follows a renamed login by twitch id', async () => {
+  const queries: string[] = []
+  const fetch: TwitchFetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body))
+    queries.push(body.query)
+    return Response.json({
+      data: {
+        user: {
+          id: '194814599',
+          login: 'rcwlol',
+          displayName: 'rcwLOL',
+          profileImageURL: 'https://example.com/new.png',
+        },
+      },
+    })
+  }
+  const patch = await channelSyncFromTwitch(
+    {
+      slug: 'rcwowo',
+      displayName: 'rcwOwO',
+      twitchId: '194814599',
+      avatarUrl: 'https://example.com/old.png',
+    },
+    { fetch },
+  )
+  expect(queries[0]).toContain('user(id:"194814599")')
+  expect(patch).toEqual({
+    slug: 'rcwlol',
+    displayName: 'rcwLOL',
+    avatarUrl: 'https://example.com/new.png',
+  })
+})
+
+test('channelSyncFromTwitch returns nothing when already in sync', async () => {
+  const fetch: TwitchFetch = async () =>
+    Response.json({
+      data: {
+        user: {
+          id: '1',
+          login: 'same',
+          displayName: 'Same',
+          profileImageURL: null,
+        },
+      },
+    })
+  expect(
+    await channelSyncFromTwitch(
+      { slug: 'same', displayName: 'Same', twitchId: '1', avatarUrl: null },
+      { fetch },
+    ),
+  ).toEqual({})
 })

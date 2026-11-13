@@ -10,7 +10,13 @@ export type Route =
   | { name: 'vod'; slug: string }
   | { name: 'import' }
   | { name: 'channels' }
-  | { name: 'settings' }
+  | { name: 'channel'; slug: string }
+  | { name: 'shows' }
+  | { name: 'show'; slug: string }
+  | { name: 'season'; show: string; season: string }
+  | { name: 'episode'; slug: string }
+  | { name: 'instances' }
+  | { name: 'instance'; edit?: string }
 
 export interface AppState {
   config: CliConfig
@@ -18,7 +24,10 @@ export interface AppState {
   me: ApiMe | null
   meError?: string
   canWrite: (channel?: string) => boolean
-  setConfig: (config: CliConfig) => void
+  /** Admin for this channel: an unscoped admin, or one limited to it. */
+  canManage: (channel: string) => boolean
+  /** Switches to another connection and returns to the home screen. */
+  connect: (config: CliConfig) => void
   push: (route: Route) => void
   replace: (route: Route) => void
   pop: () => void

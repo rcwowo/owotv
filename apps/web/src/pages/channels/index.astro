@@ -1,0 +1,48 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import ChannelAvatar from '@/components/channels/ChannelAvatar.astro'
+import { SITE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { channelPath, listChannelSummaries } from '@/lib/channels'
+
+const channels = await listChannelSummaries()
+---
+
+<Layout
+  title="Channels"
+  description={`Every channel archived on ${SITE.TITLE}`}
+>
+  <div class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
+    <div class="space-y-4 py-4">
+      <Breadcrumbs items={[{ label: 'Channels', icon: 'lucide:users' }]} />
+      <h1 class="text-4xl font-bold tracking-tight">Channels</h1>
+    </div>
+
+    <ul
+      class="grid grid-cols-2 gap-4 pb-8 sm:grid-cols-3 lg:grid-cols-4"
+      role="list"
+    >
+      {channels.map((channel) => (
+        <li>
+          <a
+            href={channelPath(channel.slug)}
+            class="group flex h-full flex-col items-center gap-3 rounded-2xl border border-border/50 bg-card/40 p-5 text-center transition-colors hover:border-primary/60 hover:bg-card/70"
+          >
+            <ChannelAvatar
+              channel={channel}
+              class="size-20 text-2xl ring-2 ring-border/60 transition-all group-hover:ring-primary sm:size-24"
+            />
+            <span class="w-full truncate font-semibold">
+              {channel.displayName}
+            </span>
+            <span class="text-xs text-muted-foreground">
+              {channel.vodCount} VOD{channel.vodCount === 1 ? '' : 's'}
+              {channel.showCount > 0 &&
+                ` • ${channel.showCount} show${channel.showCount === 1 ? '' : 's'}`}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Layout>

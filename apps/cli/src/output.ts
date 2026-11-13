@@ -23,9 +23,27 @@ export async function confirm(question: string, yes: boolean) {
   }
 }
 
+/** Asks a yes/no question. Returns false without a terminal to ask on. */
+export async function askYesNo(question: string) {
+  if (!process.stdin.isTTY) return false
+  const rl = createInterface({ input: process.stdin, output: process.stderr })
+  try {
+    const answer = await rl.question(`${question} (y/N) `)
+    return /^y(es)?$/i.test(answer.trim())
+  } finally {
+    rl.close()
+  }
+}
+
 export function errorMessage(err: unknown) {
-  if (err instanceof ApiRequestError)
-    return `${err.message} (HTTP ${err.status})`
+  if (err instanceof ApiRequestError) {
+    const issue = err.body.issues?.[0] as
+      { path?: unknown[]; message?: string } | undefined
+    const detail = issue?.message
+      ? `: ${issue.path?.length ? `${issue.path.join('.')} ` : ''}${issue.message}`
+      : ''
+    return `${err.message}${detail} (HTTP ${err.status})`
+  }
   return err instanceof Error ? err.message : String(err)
 }
 

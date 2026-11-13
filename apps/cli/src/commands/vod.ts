@@ -109,7 +109,7 @@ Title, date, length, game chapters and channel come from Twitch or the chat file
   edit: {
     summary: 'Change a VOD’s details',
     usage:
-      'owotv vod edit <slug> [--title <text>] [--date YYYY-MM-DD] [--youtube <url>] [--duration H:MM:SS] [--thumbnail <url|none>]',
+      'owotv vod edit <slug> [--title <text>] [--date YYYY-MM-DD] [--youtube <url>] [--duration H:MM:SS] [--thumbnail <url|none>] [--channel <slug>]\n\n--channel moves the VOD to another channel (needs a token for both).',
     async run(argv) {
       const { values, positionals } = parseArgs({
         args: argv,
@@ -121,12 +121,14 @@ Title, date, length, game chapters and channel come from Twitch or the chat file
           youtube: { type: 'string' },
           duration: { type: 'string' },
           thumbnail: { type: 'string' },
+          channel: { type: 'string' },
         },
       })
       const out = output(values.json)
       const slug = positionals[0]
       if (!slug) throw new Error('Pass the VOD slug.')
       const input: UpdateVodInput = {}
+      if (values.channel) input.channel = values.channel
       if (values.title) input.title = values.title
       if (values.date) input.streamDate = values.date
       if (values.youtube) input.youtubeId = parseYouTubeId(values.youtube)

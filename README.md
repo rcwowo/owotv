@@ -53,7 +53,9 @@ bun owotv token create --name me --role admin --remote
 bun link
 ```
 
-Now run `owotv` to open the TUI. Add your site URL and token in Settings, add your channel, and start importing streams. Every command also works without the TUI, run `owotv --help` to see them.
+Now run `owotv` to open the TUI. Add your site URL and token under Instances, add your channel, and start importing streams. Every command also works without the TUI, run `owotv --help` to see them.
+
+If you run more than one site, add each one as an instance and switch between them from the TUI or with `owotv instance use <name>`. Any command also takes `--instance <name>` to target a different site just once.
 
 ## How do I modify this?
 

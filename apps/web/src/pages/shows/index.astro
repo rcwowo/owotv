@@ -3,9 +3,10 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import ShowCard from '@/components/shows/ShowCard.astro'
 import Layout from '@/layouts/Layout.astro'
 import { SITE } from '@/consts'
+import { isMultiChannel } from '@/lib/channels'
 import { getShows } from '@/lib/shows'
 
-const shows = await getShows()
+const [shows, multiChannel] = await Promise.all([getShows(), isMultiChannel()])
 ---
 
 <Layout title="Shows" description={`Curated shows created and produced by ${SITE.TITLE}`}>
@@ -16,7 +17,7 @@ const shows = await getShows()
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {shows.map((show) => <ShowCard show={show} />)}
+      {shows.map((show) => <ShowCard show={show} showChannel={multiChannel} />)}
     </div>
   </main>
 </Layout>

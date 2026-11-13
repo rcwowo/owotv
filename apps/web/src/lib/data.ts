@@ -10,6 +10,12 @@ export interface GameRef {
   coverUrl: string | null
 }
 
+export interface ChannelRef {
+  slug: string
+  displayName: string
+  avatarUrl: string | null
+}
+
 export interface VodSummary {
   slug: string
   title: string
@@ -20,6 +26,7 @@ export interface VodSummary {
   youtubeId: string
   hasChat: boolean
   game: GameRef | null
+  channel: ChannelRef
 }
 
 export interface GameSummary extends GameRef {
@@ -57,12 +64,16 @@ const vodColumns = {
   gameSlug: games.slug,
   gameName: games.name,
   gameCoverUrl: games.coverUrl,
+  channelSlug: channels.slug,
+  channelName: channels.displayName,
+  channelAvatarUrl: channels.avatarUrl,
 }
 
 const selectVods = () =>
   db()
     .select(vodColumns)
     .from(vods)
+    .innerJoin(channels, eq(vods.channelId, channels.id))
     .leftJoin(games, eq(vods.primaryGameId, games.id))
 
 type VodRow = Awaited<ReturnType<typeof selectVods>>[number]
@@ -81,10 +92,16 @@ function toSummary(row: VodRow): VodSummary {
       row.gameSlug && row.gameName
         ? { slug: row.gameSlug, name: row.gameName, coverUrl: row.gameCoverUrl }
         : null,
+    channel: {
+      slug: row.channelSlug,
+      displayName: row.channelName,
+      avatarUrl: row.channelAvatarUrl,
+    },
   }
 }
 
 export interface VodFilter {
+  channelId?: number
   gameSlug?: string
   from?: Date
   to?: Date
@@ -92,6 +109,7 @@ export interface VodFilter {
 
 function vodWhere(filter: VodFilter): SQL | undefined {
   return and(
+    filter.channelId ? eq(vods.channelId, filter.channelId) : undefined,
     filter.gameSlug ? eq(games.slug, filter.gameSlug) : undefined,
     filter.from ? gte(vods.streamedAt, filter.from) : undefined,
     filter.to ? lt(vods.streamedAt, filter.to) : undefined,
@@ -121,22 +139,8 @@ export async function countVods(filter: VodFilter = {}): Promise<number> {
 }
 
 export async function getVod(slug: string) {
-  const [row] = await db()
-    .select({
-      ...vodColumns,
-      channelSlug: channels.slug,
-      channelName: channels.displayName,
-    })
-    .from(vods)
-    .innerJoin(channels, eq(vods.channelId, channels.id))
-    .leftJoin(games, eq(vods.primaryGameId, games.id))
-    .where(eq(vods.slug, slug))
-    .limit(1)
-  if (!row) return undefined
-  return {
-    ...toSummary(row),
-    channel: { slug: row.channelSlug, displayName: row.channelName },
-  }
+  const [row] = await selectVods().where(eq(vods.slug, slug)).limit(1)
+  return row ? toSummary(row) : undefined
 }
 
 export async function listGames(): Promise<GameSummary[]> {

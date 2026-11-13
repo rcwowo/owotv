@@ -6,11 +6,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { NAV_LINKS } from '@/consts'
+import { NAV_LINKS, type Link } from '@/consts'
 import { cn } from '@/lib/utils'
 import { Menu } from 'lucide-react'
 
-const MobileMenu = () => {
+const MobileMenu = ({ links = NAV_LINKS }: { links?: Link[] }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const MobileMenu = () => {
     }
   }, [])
 
-  if (NAV_LINKS.length > 0) {
+  if (links.length > 0) {
     return (
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
@@ -51,7 +51,7 @@ const MobileMenu = () => {
           sideOffset={8}
           className="min-w-40 rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
         >
-          {NAV_LINKS.map((item) => (
+          {links.map((item) => (
             <DropdownMenuItem
               key={item.href}
               asChild

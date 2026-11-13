@@ -1,7 +1,9 @@
 import { channel } from './commands/channel'
 import { chat } from './commands/chat'
+import { instance } from './commands/instance'
 import { login, whoami } from './commands/login'
 import { migrate, usage as migrateUsage } from './commands/migrate'
+import { episode, season, show } from './commands/show'
 import { token } from './commands/token'
 import { vod } from './commands/vod'
 import { errorMessage } from './output'
@@ -9,9 +11,13 @@ import { errorMessage } from './output'
 const commands = {
   login,
   whoami,
+  instance,
   vod,
   chat,
   channel,
+  show,
+  season,
+  episode,
   token,
   migrate: {
     summary: 'One-time import from Baserow',
@@ -27,9 +33,29 @@ ${Object.entries(commands)
   .join('\n')}
 
 Run \`owotv\` with no command (or \`owotv tui\`) for the interactive TUI.
-Run \`owotv <command> --help\` for details.`
+Run \`owotv <command> --help\` for details.
+Add \`--instance <name>\` to any command to use a saved instance other than the current one.`
 
-const [name, ...rest] = process.argv.slice(2)
+/** Pulls `--instance <name>` out of the arguments, wherever it appears. */
+function takeInstanceFlag(args: string[]) {
+  const rest: string[] = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!
+    if (arg === '--instance') {
+      const value = args[++i]
+      if (!value) {
+        console.error('error: --instance needs a name')
+        process.exit(1)
+      }
+      process.env.OWOTV_INSTANCE = value
+    } else if (arg.startsWith('--instance=')) {
+      process.env.OWOTV_INSTANCE = arg.slice('--instance='.length)
+    } else rest.push(arg)
+  }
+  return rest
+}
+
+const [name, ...rest] = takeInstanceFlag(process.argv.slice(2))
 const command = name ? commands[name as keyof typeof commands] : undefined
 
 const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)

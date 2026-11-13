@@ -2,12 +2,14 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import Layout from '@/layouts/Layout.astro'
 import VodCard from '@/components/vods/VodCard.astro'
+import { isMultiChannel } from '@/lib/channels'
 import { getGame, listVods } from '@/lib/data'
 
 const gameSlug = Astro.params.game ?? ''
-const [gameRow, vods] = await Promise.all([
+const [gameRow, vods, multiChannel] = await Promise.all([
   getGame(gameSlug),
   listVods({ gameSlug }),
+  isMultiChannel(),
 ])
 if (!gameRow || vods.length === 0) return new Response(null, { status: 404 })
 const game = gameRow.name
@@ -41,7 +43,7 @@ const coverUrl = gameRow.coverUrl ?? ''
     </div>
     <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
       {vods.map((vod) => (
-        <VodCard vod={vod} />
+        <VodCard vod={vod} showChannel={multiChannel} />
       ))}
     </div>
   </main>

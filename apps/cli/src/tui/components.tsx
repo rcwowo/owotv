@@ -21,6 +21,10 @@ export function Frame({
   const host = config.url
     ? (URL.parse(config.url)?.host ?? config.url)
     : 'not connected'
+  const where =
+    config.instance && config.instance !== host
+      ? `${config.instance} (${host})`
+      : host
   return (
     <Box flexDirection="column" height={rows} paddingX={1}>
       <Box justifyContent="space-between" gap={2}>
@@ -34,7 +38,7 @@ export function Frame({
         </Box>
         <Box flexShrink={0}>
           <Text dimColor>
-            {host}
+            {where}
             {me
               ? ` · ${me.name} (${me.role}${me.channel ? `, ${me.channel}` : ''})`
               : ''}
@@ -73,9 +77,12 @@ export function SelectList<T>({
   height,
   isActive = true,
   empty = 'Nothing here yet.',
+  onKey,
 }: {
   items: ListItem<T>[]
   onSelect: (item: ListItem<T>) => void
+  /** Other keys pressed while an item is highlighted */
+  onKey?: (input: string, item: ListItem<T>) => void
   height: number
   isActive?: boolean
   empty?: string
@@ -97,6 +104,7 @@ export function SelectList<T>({
       else if (key.home || input === 'g') move(0)
       else if (key.end || input === 'G') move(max)
       else if (key.return && items[index]) onSelect(items[index])
+      else if (onKey && input && items[index]) onKey(input, items[index])
     },
     { isActive },
   )

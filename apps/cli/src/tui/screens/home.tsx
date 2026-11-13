@@ -31,6 +31,12 @@ export function Home() {
               ]
             : []),
           {
+            key: 'shows',
+            label: 'Shows',
+            detail: 'seasons and episodes from YouTube',
+            value: { name: 'shows' } as Route,
+          },
+          {
             key: 'channels',
             label: 'Channels',
             detail: 'streamers on this site',
@@ -39,10 +45,12 @@ export function Home() {
         ]
       : []),
     {
-      key: 'settings',
-      label: 'Settings',
-      detail: 'site URL and API token',
-      value: { name: 'settings' },
+      key: 'instances',
+      label: 'Instances',
+      detail: config.instance
+        ? `using ${config.instance} · switch or add sites`
+        : 'add a site and API token',
+      value: { name: 'instances' },
     },
     { key: 'quit', label: 'Quit', value: null },
   ]
@@ -52,7 +60,7 @@ export function Home() {
       {connected ? null : (
         <Box marginBottom={1}>
           <Text color="yellow">
-            Not connected yet. Open Settings to add your site URL and token.
+            Not connected yet. Open Instances to add your site URL and token.
           </Text>
         </Box>
       )}

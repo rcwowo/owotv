@@ -2,10 +2,15 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import EpisodeCard from '@/components/shows/EpisodeCard.astro'
 import Layout from '@/layouts/Layout.astro'
+import ChannelAvatar from '@/components/channels/ChannelAvatar.astro'
+import { channelPath, isMultiChannel } from '@/lib/channels'
 import { getShow } from '@/lib/shows'
 import { Icon } from 'astro-icon/components'
 
-const show = await getShow(Astro.params.showId ?? '')
+const [show, multiChannel] = await Promise.all([
+  getShow(Astro.params.showId ?? ''),
+  isMultiChannel(),
+])
 if (!show) return new Response(null, { status: 404 })
 ---
 
@@ -40,6 +45,17 @@ if (!show) return new Response(null, { status: 404 })
             {show.description}
           </p>
           <div class="flex items-center gap-4 pt-4">
+            {
+              multiChannel && (
+                <a
+                  href={channelPath(show.channel.slug)}
+                  class="flex items-center gap-2 text-sm font-medium hover:text-primary"
+                >
+                  <ChannelAvatar channel={show.channel} class="size-6 text-xs" />
+                  {show.channel.displayName}
+                </a>
+              )
+            }
             <div class="flex items-center gap-2 text-sm text-muted-foreground">
               <Icon name="lucide:layers" class="size-4" />
               {show.seasons.length} Seasons

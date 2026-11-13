@@ -25,12 +25,33 @@ export type VideoProvider = (typeof videoProviders)[number]
 export const chatStatuses = ['none', 'processing', 'ready', 'failed'] as const
 export type ChatStatus = (typeof chatStatuses)[number]
 
+/** Validated against `channelLink` in `@owotv/shared` before it is written. */
+export interface StoredChannelLink {
+  platform: string
+  url: string
+}
+
 export const channels = sqliteTable('channels', {
   id: integer('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   displayName: text('display_name').notNull(),
   twitchId: text('twitch_id').unique(),
   avatarUrl: text('avatar_url'),
+  bannerUrl: text('banner_url'),
+  description: text('description').notNull().default(''),
+  links: text('links', { mode: 'json' })
+    .$type<StoredChannelLink[]>()
+    .notNull()
+    .default(sql`'[]'`),
+  createdAt: createdAt(),
+})
+
+/** Slugs a channel used before it was renamed, so old links keep working. */
+export const channelSlugAliases = sqliteTable('channel_slug_aliases', {
+  slug: text('slug').primaryKey(),
+  channelId: integer('channel_id')
+    .notNull()
+    .references(() => channels.id, { onDelete: 'cascade' }),
   createdAt: createdAt(),
 })
 
@@ -164,6 +185,7 @@ export const apiTokens = sqliteTable('api_tokens', {
 })
 
 export type Channel = typeof channels.$inferSelect
+export type ChannelSlugAlias = typeof channelSlugAliases.$inferSelect
 export type Game = typeof games.$inferSelect
 export type Vod = typeof vods.$inferSelect
 export type NewVod = typeof vods.$inferInsert

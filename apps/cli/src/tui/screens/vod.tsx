@@ -25,6 +25,7 @@ import {
   type ListItem,
 } from '../components'
 import { useApp, useClient, useKeys } from '../context'
+import { ChannelPicker } from './channels'
 import { useAsync, useTask } from '../hooks'
 
 export const formatDuration = (s: number) =>
@@ -64,9 +65,11 @@ type Mode =
     }
   | { name: 'chatFile'; path: string }
   | { name: 'confirm'; action: 'deleteVod' | 'deleteChat' }
+  | { name: 'move'; busy?: boolean; error?: string }
   | { name: 'task' }
 
 type Action =
+  | { type: 'move' }
   | { type: 'edit'; key: EditKey }
   | { type: 'chatTwitch' }
   | { type: 'chatFile' }
@@ -74,7 +77,7 @@ type Action =
   | { type: 'deleteVod' }
 
 export function Vod({ slug }: { slug: string }) {
-  const { pop, changed, revision, config, canWrite } = useApp()
+  const { pop, changed, revision, config, canWrite, me } = useApp()
   const client = useClient()
   const height = useBodyHeight(9)
   const vod = useAsync(() => client.getVod(slug), [client, slug, revision])
@@ -135,6 +138,8 @@ export function Vod({ slug }: { slug: string }) {
   }
 
   const writable = canWrite(v.channel)
+  // Moving needs access to both channels, so a token limited to one can't.
+  const canMove = writable && !me?.channel
   const actions: ListItem<Action>[] = !writable
     ? []
     : [
@@ -184,6 +189,15 @@ export function Vod({ slug }: { slug: string }) {
               },
             ]
           : []),
+        ...(canMove
+          ? [
+              {
+                key: 'move',
+                label: 'Move to another channel',
+                value: { type: 'move' } as Action,
+              },
+            ]
+          : []),
         { key: 'deleteVod', label: 'Delete VOD', value: { type: 'deleteVod' } },
       ]
 
@@ -194,6 +208,8 @@ export function Vod({ slug }: { slug: string }) {
       replaceChat((onEvent, signal) =>
         downloadChat(v.sourceTwitchVodId!, { onEvent, signal, fresh: true }),
       )
+    } else if (a.type === 'move') {
+      setMode({ name: 'move' })
     } else if (a.type === 'chatFile') {
       setMode({ name: 'chatFile', path: '' })
     } else {
@@ -242,9 +258,11 @@ export function Vod({ slug }: { slug: string }) {
             ? task.status === 'running'
               ? 'esc cancel download'
               : 'enter continue'
-            : mode.name === 'confirm'
-              ? ''
-              : 'enter save · esc cancel'
+            : mode.name === 'move'
+              ? '↑↓ move · enter pick · esc cancel'
+              : mode.name === 'confirm'
+                ? ''
+                : 'enter save · esc cancel'
       }
     >
       <Box flexDirection="column" marginBottom={1}>
@@ -321,6 +339,25 @@ export function Vod({ slug }: { slug: string }) {
             )
           }
           onCancel={() => setMode({ name: 'menu' })}
+        />
+      ) : null}
+
+      {mode.name === 'move' ? (
+        <ChannelPicker
+          current={v.channel}
+          busy={mode.busy}
+          error={mode.error}
+          onCancel={() => setMode({ name: 'menu' })}
+          onPick={(channel) => {
+            setMode({ name: 'move', busy: true })
+            client.updateVod(slug, { channel }).then(
+              () => {
+                changed()
+                setMode({ name: 'menu' })
+              },
+              (err) => setMode({ name: 'move', error: errorMessage(err) }),
+            )
+          }}
         />
       ) : null}
 

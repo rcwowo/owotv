@@ -6,10 +6,15 @@ import { buttonVariants } from '@/components/ui/button'
 import MinimalLayout from '@/layouts/MinimalLayout.astro'
 import { getYouTubePlayerElementId } from '@/lib/youtube-api'
 import { Icon } from 'astro-icon/components'
+import ChannelAvatar from '@/components/channels/ChannelAvatar.astro'
+import { channelPath, isMultiChannel } from '@/lib/channels'
 import { getVod } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
-const vod = await getVod(Astro.params.id ?? '')
+const [vod, multiChannel] = await Promise.all([
+  getVod(Astro.params.id ?? ''),
+  isMultiChannel(),
+])
 if (!vod) return new Response(null, { status: 404 })
 
 const youtubeId = vod.youtubeId
@@ -18,7 +23,9 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
 
 <MinimalLayout
   title={vod.title}
-  description={`Stream VOD: ${vod.title}`}
+  description={multiChannel
+    ? `Stream VOD from ${vod.channel.displayName}: ${vod.title}`
+    : `Stream VOD: ${vod.title}`}
   image={vod.thumbnailUrl}
 >
   <main class="flex h-screen flex-col bg-background">
@@ -38,6 +45,19 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
         <div class="max-w-[70vw]">
           <h1 class="truncate text-sm font-semibold">{vod.title}</h1>
           <p class="truncate text-xs text-muted-foreground">
+            {
+              multiChannel && (
+                <>
+                  <a
+                    href={channelPath(vod.channel.slug)}
+                    class="font-medium text-foreground hover:text-primary"
+                  >
+                    {vod.channel.displayName}
+                  </a>{' '}
+                  •{' '}
+                </>
+              )
+            }
             {vod.game?.name ?? 'Other'} • {
               vod.streamedAt.toLocaleString('en-US', {
                 month: 'long',
@@ -47,6 +67,17 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
             }
           </p>
         </div>
+        {
+          multiChannel && (
+            <a
+              href={channelPath(vod.channel.slug)}
+              title={vod.channel.displayName}
+              class="shrink-0"
+            >
+              <ChannelAvatar channel={vod.channel} class="size-8 text-sm" />
+            </a>
+          )
+        }
         {
           vod.game?.coverUrl && (
             <img

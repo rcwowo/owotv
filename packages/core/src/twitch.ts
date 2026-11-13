@@ -1,8 +1,10 @@
 import type {
+  ApiChannel,
   ChannelInput,
   TwitchDownloaderChapter,
   TwitchDownloaderChat,
   TwitchDownloaderComment,
+  UpdateChannelInput,
 } from '@owotv/shared'
 
 const GQL_URL = 'https://gql.twitch.tv/gql'
@@ -421,17 +423,32 @@ export interface TwitchUser {
   profileImageURL: string | null
 }
 
+const USER_FIELDS = 'id,login,displayName,profileImageURL(width:300)'
+
 export async function fetchTwitchUser(
   login: string,
   opts: { fetch?: TwitchFetch; signal?: AbortSignal } = {},
 ) {
   const data = await gql<{ user: TwitchUser | null }>(
     {
-      query: `query{user(login:${quote(login.trim().toLowerCase())}){id,login,displayName,profileImageURL(width:300)}}`,
+      query: `query{user(login:${quote(login.trim().toLowerCase())}){${USER_FIELDS}}}`,
     },
     opts,
   )
   if (!data.user) throw new Error(`No Twitch user "${login}"`)
+  return data.user
+}
+
+/** Looks a user up by their permanent id, which survives username changes. */
+export async function fetchTwitchUserById(
+  id: string,
+  opts: { fetch?: TwitchFetch; signal?: AbortSignal } = {},
+) {
+  const data = await gql<{ user: TwitchUser | null }>(
+    { query: `query{user(id:${quote(id)}){${USER_FIELDS}}}` },
+    opts,
+  )
+  if (!data.user) throw new Error(`No Twitch user with id ${id}`)
   return data.user
 }
 
@@ -446,4 +463,27 @@ export async function channelFromTwitch(
     twitchId: user.id,
     ...(user.profileImageURL ? { avatarUrl: user.profileImageURL } : {}),
   }
+}
+
+/**
+ * The changes needed to bring a channel in line with its Twitch account:
+ * login (slug), display name and avatar. Empty when nothing changed.
+ */
+export async function channelSyncFromTwitch(
+  channel: Pick<ApiChannel, 'slug' | 'displayName' | 'twitchId' | 'avatarUrl'>,
+  opts: { fetch?: TwitchFetch; signal?: AbortSignal } = {},
+): Promise<UpdateChannelInput> {
+  const user = channel.twitchId
+    ? await fetchTwitchUserById(channel.twitchId, opts)
+    : await fetchTwitchUser(channel.slug, opts)
+  const patch: UpdateChannelInput = {}
+  if (user.login !== channel.slug) patch.slug = user.login
+  if (user.displayName !== channel.displayName) {
+    patch.displayName = user.displayName
+  }
+  if (!channel.twitchId) patch.twitchId = user.id
+  if (user.profileImageURL && user.profileImageURL !== channel.avatarUrl) {
+    patch.avatarUrl = user.profileImageURL
+  }
+  return patch
 }

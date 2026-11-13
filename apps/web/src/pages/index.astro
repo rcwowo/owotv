@@ -1,6 +1,7 @@
 ---
 import Container from '@/components/Container.astro'
 import ContentRow from '@/components/ContentRow.astro'
+import ChannelShowcase from '@/components/channels/ChannelShowcase.astro'
 import ExplorePanel from '@/components/ExplorePanel.astro'
 import FaqAccordion from '@/components/FaqAccordion'
 import Footer from '@/components/Footer.astro'
@@ -10,17 +11,20 @@ import GameCard from '@/components/vods/GameCard.astro'
 import VodCard from '@/components/vods/VodCard.astro'
 import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
+import { channelPath, listChannelSummaries } from '@/lib/channels'
 import { listGames, listVods } from '@/lib/data'
 import { formatStreamDate } from '@/lib/date'
 import { getShows } from '@/lib/shows'
 import { cn } from '@/lib/utils'
 import { Icon } from 'astro-icon/components'
 
-const [latestVods, games, shows] = await Promise.all([
+const [latestVods, games, shows, channels] = await Promise.all([
   listVods({}, { limit: 12 }),
   listGames(),
   getShows(),
+  listChannelSummaries(),
 ])
+const multiChannel = channels.length > 1
 const featuredVod = latestVods[0]
 const recentGames = games.slice(0, 12)
 ---
@@ -53,6 +57,17 @@ const recentGames = games.slice(0, 12)
                 {featuredVod.title}
               </h1>
               <p class="text-sm text-muted-foreground">
+                {multiChannel && (
+                  <>
+                    <a
+                      href={channelPath(featuredVod.channel.slug)}
+                      class="font-medium text-foreground hover:text-primary"
+                    >
+                      {featuredVod.channel.displayName}
+                    </a>{' '}
+                    •{' '}
+                  </>
+                )}
                 Streamed on {formatStreamDate(featuredVod.streamedAt)} •{' '}
                 {featuredVod.duration}
               </p>
@@ -95,14 +110,16 @@ const recentGames = games.slice(0, 12)
       {
         latestVods.map((vod) => (
           <div class="w-72 shrink-0 sm:w-80">
-            <VodCard vod={vod} />
+            <VodCard vod={vod} showChannel={multiChannel} />
           </div>
         ))
       }
     </ContentRow>
 
+    {multiChannel && <ChannelShowcase channels={channels} />}
+
     {
-      shows.length > 0 && (
+      !multiChannel && shows.length > 0 && (
         <ContentRow title="Featured Shows" viewAllHref="/shows">
           {shows.map((show) => (
             <div class="w-72 shrink-0 sm:w-80">

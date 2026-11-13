@@ -1,0 +1,30 @@
+---
+import { cn } from '@/lib/utils'
+
+interface Props {
+  channel: { displayName: string; avatarUrl: string | null }
+  class?: string
+  loading?: 'lazy' | 'eager'
+}
+
+const { channel, class: className, loading = 'lazy' } = Astro.props
+---
+
+{channel.avatarUrl ? (
+  <img
+    src={channel.avatarUrl}
+    alt=""
+    loading={loading}
+    class={cn('aspect-square shrink-0 rounded-full object-cover', className)}
+  />
+) : (
+  <span
+    aria-hidden="true"
+    class={cn(
+      'grid aspect-square shrink-0 place-items-center rounded-full bg-secondary font-bold text-secondary-foreground',
+      className,
+    )}
+  >
+    {channel.displayName.slice(0, 1).toUpperCase()}
+  </span>
+)}

@@ -4,10 +4,11 @@ import { useCallback, useMemo, useState } from 'react'
 import { loadConfig, type CliConfig } from '../config'
 import { AppContext, ScreenActive, type AppState, type Route } from './context'
 import { useAsync } from './hooks'
-import { Channels } from './screens/channels'
+import { Channel, Channels } from './screens/channels'
 import { Home } from './screens/home'
 import { Import } from './screens/import'
-import { Settings } from './screens/settings'
+import { InstanceForm, Instances } from './screens/instances'
+import { Episode, Season, Show, Shows } from './screens/shows'
 import { Vod } from './screens/vod'
 import { Vods } from './screens/vods'
 
@@ -23,8 +24,20 @@ function Screen({ route }: { route: Route }) {
       return <Import />
     case 'channels':
       return <Channels />
-    case 'settings':
-      return <Settings />
+    case 'channel':
+      return <Channel slug={route.slug} />
+    case 'shows':
+      return <Shows />
+    case 'show':
+      return <Show slug={route.slug} />
+    case 'season':
+      return <Season show={route.show} season={route.season} />
+    case 'episode':
+      return <Episode slug={route.slug} />
+    case 'instances':
+      return <Instances />
+    case 'instance':
+      return <InstanceForm edit={route.edit} />
   }
 }
 
@@ -34,7 +47,7 @@ function App({ initial }: { initial: CliConfig }) {
   const [config, setConfig] = useState(initial)
   const [stack, setStack] = useState<Array<{ id: number; route: Route }>>(
     () => [
-      { id: 0, route: initial.url ? { name: 'home' } : { name: 'settings' } },
+      { id: 0, route: initial.url ? { name: 'home' } : { name: 'instances' } },
     ],
   )
   const [revision, setRevision] = useState(0)
@@ -45,7 +58,8 @@ function App({ initial }: { initial: CliConfig }) {
   )
   const me = useAsync(
     async () => (client && config.token ? client.whoami() : null),
-    [client],
+    // A channel rename changes the slug /me reports.
+    [client, revision],
   )
 
   const push = useCallback(
@@ -67,6 +81,15 @@ function App({ initial }: { initial: CliConfig }) {
     [],
   )
   const changed = useCallback(() => setRevision((n) => n + 1), [])
+  const connect = useCallback((next: CliConfig) => {
+    setConfig(next)
+    setStack([
+      {
+        id: nextId++,
+        route: next.url ? { name: 'home' } : { name: 'instances' },
+      },
+    ])
+  }, [])
 
   const canWrite = useCallback(
     (channel?: string) =>
@@ -77,6 +100,15 @@ function App({ initial }: { initial: CliConfig }) {
       ),
     [me.data],
   )
+  const canManage = useCallback(
+    (channel: string) =>
+      Boolean(
+        me.data &&
+        me.data.role === 'admin' &&
+        (!me.data.channel || me.data.channel === channel),
+      ),
+    [me.data],
+  )
 
   const state: AppState = {
     config,
@@ -84,7 +116,8 @@ function App({ initial }: { initial: CliConfig }) {
     me: me.data ?? null,
     meError: me.error,
     canWrite,
-    setConfig,
+    canManage,
+    connect,
     push,
     replace,
     pop,

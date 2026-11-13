@@ -1,0 +1,87 @@
+---
+import ChannelHero from '@/components/channels/ChannelHero.astro'
+import Container from '@/components/Container.astro'
+import Footer from '@/components/Footer.astro'
+import PaginationComponent from '@/components/ui/pagination'
+import VodCard from '@/components/vods/VodCard.astro'
+import { SITE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { channelPath, getChannelForPage } from '@/lib/channels'
+import { countVods, listVods } from '@/lib/data'
+import { getShows } from '@/lib/shows'
+
+const pageParam = Astro.params.page
+const currentPage = pageParam === undefined ? 1 : Number(pageParam)
+if (!Number.isInteger(currentPage) || currentPage < 1 || pageParam === '1') {
+  return new Response(null, { status: 404 })
+}
+
+const found = await getChannelForPage(Astro.params.slug ?? '')
+if (!found) return new Response(null, { status: 404 })
+const { channel, redirect } = found
+if (redirect) {
+  const rest = pageParam ? `/${pageParam}` : ''
+  return Astro.redirect(`${channelPath(redirect)}${rest}`, 301)
+}
+
+const pageSize = SITE.VODS_PER_PAGE
+const [vods, total, shows] = await Promise.all([
+  listVods(
+    { channelId: channel.id },
+    { limit: pageSize, offset: (currentPage - 1) * pageSize },
+  ),
+  countVods({ channelId: channel.id }),
+  getShows({ channelId: channel.id }),
+])
+const lastPage = Math.max(1, Math.ceil(total / pageSize))
+if (currentPage > lastPage) return new Response(null, { status: 404 })
+---
+
+<Layout
+  title={
+    currentPage > 1
+      ? `${channel.displayName} - Page ${currentPage}`
+      : channel.displayName
+  }
+  description={
+    channel.description || `Archived Twitch streams from ${channel.displayName}`
+  }
+  image={channel.bannerUrl ?? channel.avatarUrl ?? vods[0]?.thumbnailUrl}
+  headerOverlay
+  className="gap-y-0"
+>
+  <ChannelHero
+    channel={channel}
+    tab="vods"
+    vodCount={total}
+    showCount={shows.length}
+    fallbackImage={vods[0]?.thumbnailUrl}
+  />
+
+  <Container class="py-8">
+    {vods.length > 0 ? (
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {vods.map((vod) => (
+          <VodCard vod={vod} />
+        ))}
+      </div>
+    ) : (
+      <p class="py-16 text-center text-muted-foreground">
+        No VODs archived yet.
+      </p>
+    )}
+
+    {lastPage > 1 && (
+      <div class="pt-6">
+        <PaginationComponent
+          currentPage={currentPage}
+          totalPages={lastPage}
+          baseUrl={`${channelPath(channel.slug)}/`}
+          client:load
+        />
+      </div>
+    )}
+  </Container>
+
+  <Footer />
+</Layout>

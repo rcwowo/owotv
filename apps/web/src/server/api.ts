@@ -1,7 +1,23 @@
 import { chatCacheTag, CONTENT_CACHE_TAG } from '@/lib/cache'
 import {
+  ChannelNotEmptyError,
   ConflictError,
+  deleteChannel,
   createChannel,
+  createEpisode,
+  createSeason,
+  createShow,
+  deleteEpisode,
+  deleteSeason,
+  deleteShow,
+  findEpisode,
+  findShow,
+  getApiEpisode,
+  getApiShow,
+  listApiShows,
+  updateEpisode,
+  updateSeason,
+  updateShow,
   createVod,
   deleteChat,
   deleteVod,
@@ -13,6 +29,8 @@ import {
   NotFoundError,
   roleAllows,
   sha256Hex,
+  toApiChannel,
+  updateChannel,
   updateVod,
   verifyToken,
   type Store,
@@ -22,6 +40,12 @@ import { channels, createDb, vods, type TokenRole } from '@owotv/db'
 import {
   channelInput,
   chatManifest,
+  createEpisodeInput,
+  createSeasonInput,
+  createShowInput,
+  updateEpisodeInput,
+  updateSeasonInput,
+  updateShowInput,
   chatManifestKey,
   chatSegmentKey,
   createVodInput,
@@ -29,6 +53,7 @@ import {
   emoteSetKey,
   MAX_CHAT_SEGMENT_BYTES,
   MAX_EMOTE_SET_BYTES,
+  updateChannelInput,
   updateVodInput,
 } from '@owotv/shared'
 import { eq } from 'drizzle-orm'
@@ -64,6 +89,17 @@ app.onError((err, c) => {
   if (err instanceof HttpError)
     return c.json({ error: err.message }, err.status)
   if (err instanceof NotFoundError) return c.json({ error: err.message }, 404)
+  if (err instanceof ChannelNotEmptyError) {
+    return c.json(
+      {
+        error: err.message,
+        slug: err.slug,
+        vodCount: err.vodCount,
+        showCount: err.showCount,
+      },
+      409,
+    )
+  }
   if (err instanceof ConflictError) {
     return c.json({ error: err.message, slug: err.slug }, 409)
   }
@@ -91,6 +127,21 @@ function assertChannelAccess(token: TokenIdentity, channelId: number) {
   if (token.channelId !== null && token.channelId !== channelId) {
     throw new HttpError(403, 'This token is limited to another channel')
   }
+}
+
+/** Resolves a channel a token wants to put content in, checking access. */
+async function targetChannel(c: Context<ApiEnv>, slug: string) {
+  const channel = await findChannel(c.var.store.db, slug)
+  if (!channel) throw new NotFoundError(`No channel "${slug}"`)
+  assertChannelAccess(c.var.token, channel.id)
+  return channel
+}
+
+async function showForWrite(c: Context<ApiEnv>, slug: string) {
+  const show = await findShow(c.var.store.db, slug)
+  if (!show) throw new NotFoundError(`No show "${slug}"`)
+  assertChannelAccess(c.var.token, show.channelId)
+  return show
 }
 
 async function vodForWrite(c: Context<ApiEnv>, slug: string) {
@@ -202,6 +253,41 @@ app.post('/channels', requireRole('admin'), async (c) => {
   return c.json(channel, 201)
 })
 
+app.get('/channels/:slug', async (c) => {
+  const channel = await findChannel(c.var.store.db, c.req.param('slug'))
+  if (!channel) throw new NotFoundError(`No channel "${c.req.param('slug')}"`)
+  return c.json(toApiChannel(channel))
+})
+
+app.patch('/channels/:slug', requireRole('admin'), async (c) => {
+  const db = c.var.store.db
+  const channel = await findChannel(db, c.req.param('slug'))
+  if (!channel) throw new NotFoundError(`No channel "${c.req.param('slug')}"`)
+  assertChannelAccess(c.var.token, channel.id)
+  const input = updateChannelInput.parse(await readJson(c))
+  const updated = await updateChannel(db, channel, input)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(updated)
+})
+
+app.delete('/channels/:slug', requireRole('admin'), async (c) => {
+  if (c.var.token.channelId !== null) {
+    throw new HttpError(
+      403,
+      'Only admins not limited to a channel can delete channels',
+    )
+  }
+  const db = c.var.store.db
+  const channel = await findChannel(db, c.req.param('slug'))
+  if (!channel) throw new NotFoundError(`No channel "${c.req.param('slug')}"`)
+  const moveTo = c.req.query('moveTo')
+  const target = moveTo ? await findChannel(db, moveTo) : undefined
+  if (moveTo && !target) throw new NotFoundError(`No channel "${moveTo}"`)
+  await deleteChannel(db, channel, { moveToId: target?.id })
+  purge(c, CONTENT_CACHE_TAG)
+  return c.body(null, 204)
+})
+
 app.get('/vods', async (c) => {
   const db = c.var.store.db
   const slug = c.req.query('channel')
@@ -234,7 +320,10 @@ app.patch('/vods/:slug', requireRole('write'), async (c) => {
   const slug = c.req.param('slug')
   await vodForWrite(c, slug)
   const input = updateVodInput.parse(await readJson(c))
-  const vod = await updateVod(c.var.store.db, slug, input)
+  const target = input.channel
+    ? await targetChannel(c, input.channel)
+    : undefined
+  const vod = await updateVod(c.var.store.db, slug, input, target?.id)
   purge(c, CONTENT_CACHE_TAG)
   return c.json(vod)
 })
@@ -244,6 +333,119 @@ app.delete('/vods/:slug', requireRole('write'), async (c) => {
   await vodForWrite(c, slug)
   await deleteVod(c.var.store, slug)
   purge(c, CONTENT_CACHE_TAG, chatCacheTag(slug))
+  return c.body(null, 204)
+})
+
+app.get('/shows', async (c) => {
+  const db = c.var.store.db
+  const slug = c.req.query('channel')
+  const channel = slug ? await findChannel(db, slug) : undefined
+  if (slug && !channel) throw new NotFoundError(`No channel "${slug}"`)
+  return c.json(await listApiShows(db, { channelId: channel?.id }))
+})
+
+app.get('/shows/:show', async (c) => {
+  const show = await getApiShow(c.var.store.db, c.req.param('show'))
+  if (!show) throw new NotFoundError(`No show "${c.req.param('show')}"`)
+  return c.json(show)
+})
+
+app.post('/shows', requireRole('write'), async (c) => {
+  const input = createShowInput.parse(await readJson(c))
+  const channel = await targetChannel(c, input.channel)
+  const show = await createShow(c.var.store.db, channel.id, input)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(show, 201)
+})
+
+app.patch('/shows/:show', requireRole('write'), async (c) => {
+  const slug = c.req.param('show')
+  await showForWrite(c, slug)
+  const input = updateShowInput.parse(await readJson(c))
+  const target = input.channel
+    ? await targetChannel(c, input.channel)
+    : undefined
+  const show = await updateShow(c.var.store.db, slug, input, target?.id)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(show)
+})
+
+app.delete('/shows/:show', requireRole('write'), async (c) => {
+  const slug = c.req.param('show')
+  await showForWrite(c, slug)
+  await deleteShow(c.var.store.db, slug)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.body(null, 204)
+})
+
+app.post('/shows/:show/seasons', requireRole('write'), async (c) => {
+  const slug = c.req.param('show')
+  await showForWrite(c, slug)
+  const input = createSeasonInput.parse(await readJson(c))
+  const show = await createSeason(c.var.store.db, slug, input)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(show, 201)
+})
+
+app.patch('/shows/:show/seasons/:season', requireRole('write'), async (c) => {
+  const { show: slug, season } = c.req.param()
+  await showForWrite(c, slug)
+  const input = updateSeasonInput.parse(await readJson(c))
+  const show = await updateSeason(c.var.store.db, slug, season, input)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(show)
+})
+
+app.delete('/shows/:show/seasons/:season', requireRole('write'), async (c) => {
+  const { show: slug, season } = c.req.param()
+  await showForWrite(c, slug)
+  await deleteSeason(c.var.store.db, slug, season)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.body(null, 204)
+})
+
+app.post(
+  '/shows/:show/seasons/:season/episodes',
+  requireRole('write'),
+  async (c) => {
+    const { show: slug, season } = c.req.param()
+    await showForWrite(c, slug)
+    const input = createEpisodeInput.parse(await readJson(c))
+    const episode = await createEpisode(c.var.store.db, slug, season, input)
+    purge(c, CONTENT_CACHE_TAG)
+    return c.json(episode, 201)
+  },
+)
+
+app.get('/episodes/:episode', async (c) => {
+  const episode = await getApiEpisode(c.var.store.db, c.req.param('episode'))
+  if (!episode) {
+    throw new NotFoundError(`No episode "${c.req.param('episode')}"`)
+  }
+  return c.json(episode)
+})
+
+async function episodeForWrite(c: Context<ApiEnv>, slug: string) {
+  const found = await findEpisode(c.var.store.db, slug)
+  if (!found) throw new NotFoundError(`No episode "${slug}"`)
+  assertChannelAccess(c.var.token, found.show.channelId)
+  return found
+}
+
+app.patch('/episodes/:episode', requireRole('write'), async (c) => {
+  const slug = c.req.param('episode')
+  await episodeForWrite(c, slug)
+  const input = updateEpisodeInput.parse(await readJson(c))
+  const episode = await updateEpisode(c.var.store.db, slug, input)
+  purge(c, CONTENT_CACHE_TAG)
+  return c.json(episode)
+})
+
+app.delete('/episodes/:episode', requireRole('write'), async (c) => {
+  const slug = c.req.param('episode')
+  await episodeForWrite(c, slug)
+  await deleteEpisode(c.var.store.db, slug)
+  purge(c, CONTENT_CACHE_TAG)
   return c.body(null, 204)
 })
 

@@ -1,5 +1,14 @@
 import {
   apiChannel,
+  apiEpisode,
+  apiShow,
+  apiShowSummary,
+  createEpisodeInput,
+  createSeasonInput,
+  createShowInput,
+  updateEpisodeInput,
+  updateSeasonInput,
+  updateShowInput,
   apiError,
   apiMe,
   apiVod,
@@ -10,6 +19,7 @@ import {
   emoteSet,
   MAX_CHAT_SEGMENT_BYTES,
   MAX_EMOTE_SET_BYTES,
+  updateChannelInput,
   updateVodInput,
 } from '@owotv/shared'
 import { version } from 'package.json'
@@ -31,10 +41,20 @@ bun run owotv token create --name my-bot --role write [--channel <slug>] --remot
 | Role | Can |
 | --- | --- |
 | \`read\` | Call \`GET /api/me\` |
-| \`write\` | Create, edit, and delete VODs and their chat |
-| \`admin\` | Everything above, plus create channels |
+| \`write\` | Create, edit, and delete VODs, their chat, and shows |
+| \`admin\` | Everything above, plus edit channels. Admins not limited to a channel can also create them |
 
-A token created with \`--channel\` can only touch VODs on that channel.
+A token created with \`--channel\` can only touch that channel and its VODs. An \`admin\` token limited to a channel is that channel's manager: it can edit the channel's name, slug, description, images, and links.
+
+When a channel's slug changes, for example after a Twitch username change, the old slug keeps working in the API and \`/channels/<old>\` redirects to the new page.
+
+## Shows
+
+Shows hold seasons, and seasons hold episodes. Episodes are YouTube videos and don't need to be VODs. Create a show with \`POST /api/shows\`, add seasons to it, then add episodes to a season.
+
+## Moving content between channels
+
+Send \`channel\` in \`PATCH /api/vods/{slug}\` or \`PATCH /api/shows/{show}\` to move it. The token needs access to both channels, so only tokens not limited to a channel can move content between channels.
 
 ## Adding a VOD with chat
 
@@ -59,10 +79,32 @@ Errors return \`{ "error": "…" }\`. Validation errors (400) add \`issues\`, an
 const registry = z.registry<{ id: string; description?: string }>()
 registry.add(apiChannel, { id: 'Channel' })
 registry.add(channelInput, { id: 'ChannelInput' })
+registry.add(updateChannelInput, {
+  id: 'UpdateChannel',
+  description: 'Only the fields you send are changed',
+})
 registry.add(apiVod, { id: 'Vod' })
 registry.add(createVodInput, { id: 'CreateVod' })
 registry.add(updateVodInput, {
   id: 'UpdateVod',
+  description: 'Only the fields you send are changed',
+})
+registry.add(apiShowSummary, { id: 'ShowSummary' })
+registry.add(apiShow, { id: 'Show' })
+registry.add(apiEpisode, { id: 'Episode' })
+registry.add(createShowInput, { id: 'CreateShow' })
+registry.add(updateShowInput, {
+  id: 'UpdateShow',
+  description: 'Only the fields you send are changed',
+})
+registry.add(createSeasonInput, { id: 'CreateSeason' })
+registry.add(updateSeasonInput, {
+  id: 'UpdateSeason',
+  description: 'Only the fields you send are changed',
+})
+registry.add(createEpisodeInput, { id: 'CreateEpisode' })
+registry.add(updateEpisodeInput, {
+  id: 'UpdateEpisode',
   description: 'Only the fields you send are changed',
 })
 registry.add(apiMe, { id: 'Me' })
@@ -152,6 +194,54 @@ const paths = {
       },
     },
   },
+  '/api/channels/{slug}': {
+    parameters: [
+      path('slug', 'Channel slug. Old slugs from before a rename also work.'),
+    ],
+    get: {
+      tags: ['Channels'],
+      operationId: 'getChannel',
+      summary: 'Get a channel',
+      security: [],
+      responses: { 200: ok('Channel'), 404: errors.notFound },
+    },
+    patch: {
+      tags: ['Channels'],
+      operationId: 'updateChannel',
+      summary: 'Edit a channel',
+      description:
+        'Needs an admin token for this channel, or one not limited to a channel. Changing `slug` keeps the old slug as an alias. Returns 409 when the slug or Twitch id belongs to another channel.',
+      security: auth,
+      requestBody: body('UpdateChannel'),
+      responses: {
+        200: ok('Channel'),
+        400: errors.badRequest,
+        ...writeErrors,
+        409: errors.conflict,
+      },
+    },
+    delete: {
+      tags: ['Channels'],
+      operationId: 'deleteChannel',
+      summary: 'Delete a channel',
+      description:
+        'Needs an admin token not limited to a channel. A channel with VODs or shows returns 409 with `vodCount` and `showCount`: delete them first (the CLI and TUI can do this for you), or pass `moveTo` to move them to another channel. Old slugs and API tokens limited to the channel are deleted with it.',
+      security: auth,
+      parameters: [
+        {
+          name: 'moveTo',
+          in: 'query',
+          description: 'Move the VODs and shows to this channel, then delete',
+          schema: { type: 'string' },
+        },
+      ],
+      responses: {
+        ...noContent,
+        ...writeErrors,
+        409: error('The channel still has VODs or shows'),
+      },
+    },
+  },
   '/api/vods': {
     get: {
       tags: ['VODs'],
@@ -207,7 +297,7 @@ const paths = {
     patch: {
       tags: ['VODs'],
       operationId: 'updateVod',
-      summary: 'Edit a VOD',
+      summary: 'Edit or move a VOD',
       security: auth,
       requestBody: body('UpdateVod'),
       responses: { 200: ok('Vod'), 400: errors.badRequest, ...writeErrors },
@@ -217,6 +307,156 @@ const paths = {
       operationId: 'deleteVod',
       summary: 'Delete a VOD',
       description: 'Also deletes its chat.',
+      security: auth,
+      responses: { ...noContent, ...writeErrors },
+    },
+  },
+  '/api/shows': {
+    get: {
+      tags: ['Shows'],
+      operationId: 'listShows',
+      summary: 'List shows',
+      security: [],
+      parameters: [
+        {
+          name: 'channel',
+          in: 'query',
+          description: 'Only shows from this channel',
+          schema: { type: 'string' },
+        },
+      ],
+      responses: { 200: list('ShowSummary'), 404: errors.notFound },
+    },
+    post: {
+      tags: ['Shows'],
+      operationId: 'createShow',
+      summary: 'Create a show',
+      description:
+        'Needs a write token for the channel. Returns 409 when the slug is taken.',
+      security: auth,
+      requestBody: body('CreateShow'),
+      responses: {
+        201: ok('Show', 'Created'),
+        400: errors.badRequest,
+        ...writeErrors,
+        409: errors.conflict,
+      },
+    },
+  },
+  '/api/shows/{show}': {
+    parameters: [path('show', 'Show slug')],
+    get: {
+      tags: ['Shows'],
+      operationId: 'getShow',
+      summary: 'Get a show with its seasons and episodes',
+      security: [],
+      responses: { 200: ok('Show'), 404: errors.notFound },
+    },
+    patch: {
+      tags: ['Shows'],
+      operationId: 'updateShow',
+      summary: 'Edit or move a show',
+      security: auth,
+      requestBody: body('UpdateShow'),
+      responses: {
+        200: ok('Show'),
+        400: errors.badRequest,
+        ...writeErrors,
+        409: errors.conflict,
+      },
+    },
+    delete: {
+      tags: ['Shows'],
+      operationId: 'deleteShow',
+      summary: 'Delete a show',
+      description: 'Also deletes its seasons and episodes.',
+      security: auth,
+      responses: { ...noContent, ...writeErrors },
+    },
+  },
+  '/api/shows/{show}/seasons': {
+    parameters: [path('show', 'Show slug')],
+    post: {
+      tags: ['Shows'],
+      operationId: 'createSeason',
+      summary: 'Add a season',
+      security: auth,
+      requestBody: body('CreateSeason'),
+      responses: {
+        201: ok('Show', 'Created. Returns the whole show.'),
+        400: errors.badRequest,
+        ...writeErrors,
+        409: errors.conflict,
+      },
+    },
+  },
+  '/api/shows/{show}/seasons/{season}': {
+    parameters: [
+      path('show', 'Show slug'),
+      path('season', 'Season slug, unique within its show'),
+    ],
+    patch: {
+      tags: ['Shows'],
+      operationId: 'updateSeason',
+      summary: 'Edit or reorder a season',
+      security: auth,
+      requestBody: body('UpdateSeason'),
+      responses: {
+        200: ok('Show'),
+        400: errors.badRequest,
+        ...writeErrors,
+        409: errors.conflict,
+      },
+    },
+    delete: {
+      tags: ['Shows'],
+      operationId: 'deleteSeason',
+      summary: 'Delete a season',
+      description: 'Also deletes its episodes.',
+      security: auth,
+      responses: { ...noContent, ...writeErrors },
+    },
+  },
+  '/api/shows/{show}/seasons/{season}/episodes': {
+    parameters: [
+      path('show', 'Show slug'),
+      path('season', 'Season slug, unique within its show'),
+    ],
+    post: {
+      tags: ['Shows'],
+      operationId: 'createEpisode',
+      summary: 'Add an episode',
+      description: 'Any YouTube video can be an episode.',
+      security: auth,
+      requestBody: body('CreateEpisode'),
+      responses: {
+        201: ok('Episode', 'Created'),
+        400: errors.badRequest,
+        ...writeErrors,
+      },
+    },
+  },
+  '/api/episodes/{episode}': {
+    parameters: [path('episode', 'Episode slug')],
+    get: {
+      tags: ['Shows'],
+      operationId: 'getEpisode',
+      summary: 'Get an episode',
+      security: [],
+      responses: { 200: ok('Episode'), 404: errors.notFound },
+    },
+    patch: {
+      tags: ['Shows'],
+      operationId: 'updateEpisode',
+      summary: 'Edit, reorder, or move an episode to another season',
+      security: auth,
+      requestBody: body('UpdateEpisode'),
+      responses: { 200: ok('Episode'), 400: errors.badRequest, ...writeErrors },
+    },
+    delete: {
+      tags: ['Shows'],
+      operationId: 'deleteEpisode',
+      summary: 'Delete an episode',
       security: auth,
       responses: { ...noContent, ...writeErrors },
     },
@@ -357,6 +597,7 @@ export function openApiSpec(origin: string) {
     tags: [
       { name: 'VODs', description: 'Archived streams' },
       { name: 'Channels', description: 'Streamers archived on this instance' },
+      { name: 'Shows', description: 'Shows, their seasons, and episodes' },
       { name: 'Chat replay', description: 'Public, cached chat files' },
       { name: 'Chat upload', description: 'Adding and replacing chat' },
       { name: 'Tokens', description: 'API token details' },
