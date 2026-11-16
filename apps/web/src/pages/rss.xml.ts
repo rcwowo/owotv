@@ -9,7 +9,7 @@ export async function GET(context: APIContext) {
   return rss({
     title: SITE.TITLE,
     description: SITE.DESCRIPTION,
-    site: context.site ?? SITE.SITEURL,
+    site: context.site!,
     stylesheet: '/pretty-feed-v3.xsl',
     items: vods.map((vod) => {
       const game = vod.game?.name ?? 'Other'

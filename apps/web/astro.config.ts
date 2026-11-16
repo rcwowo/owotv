@@ -9,7 +9,7 @@ import icon from 'astro-icon'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://owo.rcw.lol',
+  site: 'https://tv.rcw.lol',
   output: 'server',
   adapter: cloudflare({ imageService: 'passthrough' }),
   session: false,

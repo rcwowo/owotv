@@ -10,7 +10,6 @@ export type Site = {
   DESCRIPTION: string
   EMAIL: string
   VODS_PER_PAGE: number
-  SITEURL: string
 }
 
 export type Link = {
@@ -24,7 +23,6 @@ export const SITE: Site = {
     'A fully featured archive of my past livestreams. Complete with chat replay and other features.',
   EMAIL: 'riley@rcw.lol',
   VODS_PER_PAGE: 21,
-  SITEURL: 'https://tv.rcw.lol',
 }
 
 export const NAV_LINKS: Link[] = [
