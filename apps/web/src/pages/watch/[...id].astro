@@ -23,9 +23,11 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
 
 <MinimalLayout
   title={vod.title}
-  description={multiChannel
-    ? `Stream VOD from ${vod.channel.displayName}: ${vod.title}`
-    : `Stream VOD: ${vod.title}`}
+  description={
+    multiChannel
+      ? `Stream VOD from ${vod.channel.displayName}: ${vod.title}`
+      : `Stream VOD: ${vod.title}`
+  }
   image={vod.thumbnailUrl}
 >
   <main class="flex h-screen flex-col bg-background">
@@ -33,7 +35,10 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
     <div class="flex items-center justify-between border-b p-4">
       <div class="flex items-center gap-2">
         <button
-          class={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'cursor-pointer')}
+          class={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'cursor-pointer',
+          )}
           onclick="(function(){try{if(window.history.length>1){window.history.back()}else{window.location.href='/'}}catch(e){window.location.href='/'}})()"
         >
           <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
@@ -45,50 +50,43 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
         <div class="max-w-[70vw]">
           <h1 class="truncate text-sm font-semibold">{vod.title}</h1>
           <p class="truncate text-xs text-muted-foreground">
-            {
-              multiChannel && (
-                <>
-                  <a
-                    href={channelPath(vod.channel.slug)}
-                    class="font-medium text-foreground hover:text-primary"
-                  >
-                    {vod.channel.displayName}
-                  </a>{' '}
-                  •{' '}
-                </>
-              )
-            }
-            {vod.game?.name ?? 'Other'} • {
-              vod.streamedAt.toLocaleString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })
-            }
+            {multiChannel && (
+              <>
+                <a
+                  href={channelPath(vod.channel.slug)}
+                  class="font-medium text-foreground hover:text-primary"
+                >
+                  {vod.channel.displayName}
+                </a>{' '}
+                •{' '}
+              </>
+            )}
+            {vod.game?.name ?? 'Other'} •{' '}
+            {vod.streamedAt.toLocaleString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
           </p>
         </div>
-        {
-          multiChannel && (
-            <a
-              href={channelPath(vod.channel.slug)}
-              title={vod.channel.displayName}
-              class="shrink-0"
-            >
-              <ChannelAvatar channel={vod.channel} class="size-8 text-sm" />
-            </a>
-          )
-        }
-        {
-          vod.game?.coverUrl && (
-            <img
-              src={vod.game.coverUrl}
-              alt={`Game cover for ${vod.game.name}`}
-              width="32"
-              height="32"
-              class="size-8 rounded object-cover"
-            />
-          )
-        }
+        {multiChannel && (
+          <a
+            href={channelPath(vod.channel.slug)}
+            title={vod.channel.displayName}
+            class="shrink-0"
+          >
+            <ChannelAvatar channel={vod.channel} class="size-8 text-sm" />
+          </a>
+        )}
+        {vod.game?.coverUrl && (
+          <img
+            src={vod.game.coverUrl}
+            alt={`Game cover for ${vod.game.name}`}
+            width="32"
+            height="32"
+            class="size-8 rounded object-cover"
+          />
+        )}
       </div>
     </div>
 
@@ -97,24 +95,20 @@ const playerElementId = getYouTubePlayerElementId(youtubeId)
       <!-- Video Player -->
       <div class="relative flex flex-1 flex-col bg-black">
         <div class="relative h-full w-full">
-          {
-            youtubeId && (
-              <>
-                <div
-                  id={playerElementId}
-                  class="absolute left-0 top-0 h-full w-full"
-                />
-                <YouTubeWatchPlayer client:load youtubeId={youtubeId} />
-              </>
-            )
-          }
+          {youtubeId && (
+            <>
+              <div
+                id={playerElementId}
+                class="absolute left-0 top-0 h-full w-full"
+              />
+              <YouTubeWatchPlayer client:load youtubeId={youtubeId} />
+            </>
+          )}
         </div>
       </div>
 
       <!-- Chat Replay -->
-      {
-        vod.hasChat && <ChatReplay client:load vodSlug={vod.slug} />
-      }
+      {vod.hasChat && <ChatReplay client:load vodSlug={vod.slug} />}
     </div>
   </main>
 </MinimalLayout>

@@ -32,14 +32,14 @@ export function EpisodePlaylist({
   return (
     <div
       className={cn(
-        'relative flex flex-col border-l bg-background transition-all duration-300',
+        'bg-background relative flex flex-col border-l transition-all duration-300',
         isCollapsed ? 'w-12' : 'w-80 md:w-96',
       )}
     >
       <Button
         variant="outline"
         size="icon"
-        className="absolute -left-2.5 top-4 z-10 size-6 border-border/60 bg-card shadow-sm cursor-pointer"
+        className="border-border/60 bg-card absolute top-4 -left-2.5 z-10 size-6 cursor-pointer shadow-sm"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? (
@@ -52,7 +52,7 @@ export function EpisodePlaylist({
       {!isCollapsed ? (
         <>
           <div className="flex flex-col gap-3 border-b p-6">
-            <h2 className="text-lg font-semibold leading-none tracking-tight">
+            <h2 className="text-lg leading-none font-semibold tracking-tight">
               {show.title}
             </h2>
 
@@ -76,20 +76,20 @@ export function EpisodePlaylist({
               <DropdownMenuContent
                 align="start"
                 sideOffset={8}
-                className="min-w-(--radix-dropdown-menu-trigger-width) rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
+                className="border-border/60 bg-popover/95 min-w-(--radix-dropdown-menu-trigger-width) rounded-lg p-1 shadow-md backdrop-blur-xl"
               >
                 {show.seasons.map((season) => (
                   <DropdownMenuItem
                     key={season.id}
                     onSelect={() => setSelectedSeasonId(season.id)}
                     className={cn(
-                      'rounded-md p-0 focus:bg-secondary/50 focus:text-foreground',
+                      'focus:bg-secondary/50 focus:text-foreground rounded-md p-0',
                       'data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground',
                       selectedSeasonId === season.id &&
                         'bg-secondary/40 text-foreground',
                     )}
                   >
-                    <span className="block w-full cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors">
+                    <span className="text-muted-foreground block w-full cursor-pointer rounded-md px-3 py-2 text-sm transition-colors">
                       {season.title}
                     </span>
                   </DropdownMenuItem>
@@ -116,8 +116,8 @@ export function EpisodePlaylist({
         </>
       ) : (
         <div className="flex flex-col items-center space-y-4 py-4">
-          <ListVideo className="h-5 w-5 text-muted-foreground" />
-          <span className="rotate-180 select-none font-semibold uppercase text-muted-foreground [writing-mode:vertical-lr]">
+          <ListVideo className="text-muted-foreground h-5 w-5" />
+          <span className="text-muted-foreground rotate-180 font-semibold uppercase select-none [writing-mode:vertical-lr]">
             Playlist Viewer
           </span>
         </div>

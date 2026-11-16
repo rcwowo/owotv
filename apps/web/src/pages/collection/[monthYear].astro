@@ -1,7 +1,7 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import Layout from '@/layouts/Layout.astro'
 import VodCard from '@/components/vods/VodCard.astro'
+import Layout from '@/layouts/Layout.astro'
 import { isMultiChannel } from '@/lib/channels'
 import { listVods, parseMonthSlug } from '@/lib/data'
 
@@ -14,12 +14,15 @@ if (!range || vods.length === 0) return new Response(null, { status: 404 })
 const monthYear = range.label
 ---
 
-<Layout title={`${monthYear} VODs`} description={`Archive of Twitch streams from ${monthYear}`}>
+<Layout
+  title={`${monthYear} VODs`}
+  description={`Archive of Twitch streams from ${monthYear}`}
+>
   <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
     <div class="py-4">
       <Breadcrumbs
         items={[
-          { href: '/collection', label: 'Collections', icon: 'lucide:folder'},
+          { href: '/collection', label: 'Collections', icon: 'lucide:folder' },
           { label: monthYear, icon: 'lucide:calendar' },
         ]}
       />

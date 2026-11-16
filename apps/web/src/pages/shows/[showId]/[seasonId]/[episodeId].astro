@@ -43,31 +43,29 @@ const youtubeId = getYouTubeVideoID(episode.videoUrl)
       <!-- Main Player Area -->
       <div class="flex flex-1 flex-col bg-black relative">
         <div class="flex-1 flex items-center justify-center">
-        {
-            youtubeId ? (
-                <iframe
-                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&modestbranding=1&rel=0`}
-                    title={episode.title}
-                    class="h-full w-full max-h-screen aspect-video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                />
-            ) : (
-                <div class="flex h-full items-center justify-center text-muted-foreground">
-                    <p>Invalid Video URL</p>
-                </div>
-            )
-        }
+          {youtubeId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&modestbranding=1&rel=0`}
+              title={episode.title}
+              class="h-full w-full max-h-screen aspect-video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          ) : (
+            <div class="flex h-full items-center justify-center text-muted-foreground">
+              <p>Invalid Video URL</p>
+            </div>
+          )}
         </div>
       </div>
 
-       <!-- Playlist Sidebar  -->
-        <EpisodePlaylist 
-            client:load 
-            show={show} 
-            currentSeasonId={season.id} 
-            currentEpisodeId={episode.id} 
-        />
+      <!-- Playlist Sidebar  -->
+      <EpisodePlaylist
+        client:load
+        show={show}
+        currentSeasonId={season.id}
+        currentEpisodeId={episode.id}
+      />
     </div>
   </main>
 </MinimalLayout>

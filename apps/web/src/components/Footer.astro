@@ -15,9 +15,7 @@ const isExternal = (href: string) =>
 ---
 
 <footer class="mt-auto border-t border-border/50">
-  <Container
-    class="flex flex-col gap-10 py-14 sm:flex-row sm:items-center sm:justify-between sm:py-16"
-  >
+  <Container class="flex flex-col gap-10 py-14 sm:flex-row sm:items-center sm:justify-between sm:py-16">
     <div class="flex flex-col">
       <a href="/" class="inline-flex w-fit" aria-label="owoTV home">
         <img
@@ -51,27 +49,25 @@ const isExternal = (href: string) =>
     </div>
 
     <ul class="flex flex-col items-start gap-2.5 sm:items-end" role="list">
-      {
-        FOOTER_LINKS.map((item) => {
-          const href = getFooterHref(item.href, item.label)
-          const external = isExternal(href)
-          return (
-            <li>
-              <Link
-                href={href}
-                external={external}
-                class="group inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {item.label}
-                <Icon
-                  name="lucide:external-link"
-                  class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
-                />
-              </Link>
-            </li>
-          )
-        })
-      }
+      {FOOTER_LINKS.map((item) => {
+        const href = getFooterHref(item.href, item.label)
+        const external = isExternal(href)
+        return (
+          <li>
+            <Link
+              href={href}
+              external={external}
+              class="group inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {item.label}
+              <Icon
+                name="lucide:external-link"
+                class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
+              />
+            </Link>
+          </li>
+        )
+      })}
     </ul>
   </Container>
 </footer>

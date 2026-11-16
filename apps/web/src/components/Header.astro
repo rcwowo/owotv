@@ -10,7 +10,6 @@ import { isMultiChannel } from '@/lib/channels'
 const links = (await isMultiChannel())
   ? [{ href: '/channels', label: 'Channels' }, ...NAV_LINKS]
   : NAV_LINKS
-
 ---
 
 <header
@@ -26,17 +25,15 @@ const links = (await isMultiChannel())
         <Logo class="header-logo" />
 
         <div class="hidden items-center gap-1 sm:flex">
-          {
-            links.map((item) => (
-              <Link
-                href={item.href}
-                data-nav-link
-                class="nav-link rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-secondary/50 hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))
-          }
+          {links.map((item) => (
+            <Link
+              href={item.href}
+              data-nav-link
+              class="nav-link rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-secondary/50 hover:text-foreground"
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
 

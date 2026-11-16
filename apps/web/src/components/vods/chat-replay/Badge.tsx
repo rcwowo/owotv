@@ -23,9 +23,7 @@ export function Badge({ badgeId }: BadgeProps) {
             className="mr-1 inline-block h-4 w-4"
           />
         </TooltipTrigger>
-        <TooltipContent>
-          {badge.title}
-        </TooltipContent>
+        <TooltipContent>{badge.title}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )

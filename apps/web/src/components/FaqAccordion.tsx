@@ -54,7 +54,7 @@ export default function FaqAccordion({ siteTitle }: FaqAccordionProps) {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="chat-replay" className='border-b-0'>
+      <AccordionItem value="chat-replay" className="border-b-0">
         <AccordionTrigger>What is chat replay?</AccordionTrigger>
         <AccordionContent>
           Chat replay is a feature that loads the Twitch chat messages that were

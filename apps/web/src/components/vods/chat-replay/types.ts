@@ -16,8 +16,8 @@ export interface YouTubeEvent {
 }
 
 export interface BadgeProps {
-  badgeId: string;
-  version: string;
+  badgeId: string
+  version: string
 }
 
 export interface TwitchEmoteProps {
@@ -29,4 +29,3 @@ export interface SeventvEmoteProps {
   emoteId: string
   text: string
 }
-

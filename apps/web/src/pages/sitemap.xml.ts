@@ -8,7 +8,14 @@ interface SitemapEntry {
   lastmod?: Date
 }
 
-const STATIC_PATHS = ['/', '/vods', '/channels', '/shows', '/games', '/collection']
+const STATIC_PATHS = [
+  '/',
+  '/vods',
+  '/channels',
+  '/shows',
+  '/games',
+  '/collection',
+]
 
 const escapeXml = (value: string) =>
   value

@@ -26,6 +26,7 @@
     "preview": "bun --filter @owotv/web preview",
     "deploy": "bun --filter @owotv/web deploy",
     "prettier": "prettier --write .",
+    "prettier:check": "prettier --check .",
     "db:generate": "bun --filter @owotv/db generate",
     "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
     "db:migrate:remote": "bun --filter @owotv/web db:migrate:remote",

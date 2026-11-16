@@ -56,7 +56,9 @@ export default function YouTubeWatchPlayer({
     const attemptInitialization = async () => {
       if (cancelled || attempts >= maxAttempts) {
         if (attempts >= maxAttempts) {
-          console.error('[YouTubeWatchPlayer] Max initialization attempts reached')
+          console.error(
+            '[YouTubeWatchPlayer] Max initialization attempts reached',
+          )
         }
         return
       }

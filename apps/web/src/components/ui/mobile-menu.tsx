@@ -49,17 +49,17 @@ const MobileMenu = ({ links = NAV_LINKS }: { links?: Link[] }) => {
         <DropdownMenuContent
           align="start"
           sideOffset={8}
-          className="min-w-40 rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
+          className="border-border/60 bg-popover/95 min-w-40 rounded-lg p-1 shadow-md backdrop-blur-xl"
         >
           {links.map((item) => (
             <DropdownMenuItem
               key={item.href}
               asChild
-              className="rounded-md p-0 focus:bg-secondary/50 focus:text-foreground data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground"
+              className="focus:bg-secondary/50 focus:text-foreground data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground rounded-md p-0"
             >
               <a
                 href={item.href}
-                className="block w-full cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors focus-visible:outline-hidden"
+                className="text-muted-foreground block w-full cursor-pointer rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-hidden"
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}

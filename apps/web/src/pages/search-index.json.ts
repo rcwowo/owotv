@@ -63,7 +63,12 @@ export async function GET() {
   for (const show of shows) {
     const showTokens = tokenizeField(show.title)
     const descTokens = tokenizeField(show.description)
-    const showBlob = buildSearchBlob([show.title, show.description, 'show', 'series'])
+    const showBlob = buildSearchBlob([
+      show.title,
+      show.description,
+      'show',
+      'series',
+    ])
 
     index.push({
       type: 'show',
@@ -119,9 +124,7 @@ export async function GET() {
 
   for (const { label: monthYear, slug, vodCount: count } of months) {
     const [monthName, year] = monthYear.split(' ')
-    const dateTokens = buildDateTokens(
-      new Date(`${monthName} 1, ${year}`),
-    )
+    const dateTokens = buildDateTokens(new Date(`${monthName} 1, ${year}`))
     const titleTokens = tokenizeField(monthYear)
     const blob = buildSearchBlob([
       monthYear,

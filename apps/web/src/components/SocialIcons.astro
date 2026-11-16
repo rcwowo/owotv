@@ -37,29 +37,24 @@ const getSocialLink = ({ href, label }: SocialLink) => ({
 ---
 
 <ul class={cn('not-prose flex flex-wrap gap-2', className)} role="list">
-  {
-    links.map((link) => {
-      const { href, ariaLabel, iconName } = getSocialLink(link)
-      return (
-        <li>
-          <Link
-            href={href}
-            aria-label={ariaLabel}
-            title={ariaLabel}
-            class={cn(buttonVariants({ variant: 'outline', size: large ? 'lg' : 'icon' }), large ? 'w-full gap-2' : 'gap-2')}
-            external
-          >
-            <Icon name={iconName} class="size-4 min-w-4 min-h-4" />
-            {
-            large && (
-              <p class="text-sm">
-                {ariaLabel}
-              </p>
-            )
-          }
-          </Link>
-        </li>
-      )
-    })
-  }
+  {links.map((link) => {
+    const { href, ariaLabel, iconName } = getSocialLink(link)
+    return (
+      <li>
+        <Link
+          href={href}
+          aria-label={ariaLabel}
+          title={ariaLabel}
+          class={cn(
+            buttonVariants({ variant: 'outline', size: large ? 'lg' : 'icon' }),
+            large ? 'w-full gap-2' : 'gap-2',
+          )}
+          external
+        >
+          <Icon name={iconName} class="size-4 min-w-4 min-h-4" />
+          {large && <p class="text-sm">{ariaLabel}</p>}
+        </Link>
+      </li>
+    )
+  })}
 </ul>

@@ -13,8 +13,6 @@ const maxWidth =
   size === '2xl' ? 'max-w-(--breakpoint-2xl)' : 'max-w-(--breakpoint-xl)'
 ---
 
-<div
-  class={cn('mx-auto w-full px-4 sm:px-6 lg:px-8', maxWidth, className)}
->
+<div class={cn('mx-auto w-full px-4 sm:px-6 lg:px-8', maxWidth, className)}>
   <slot />
 </div>

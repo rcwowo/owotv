@@ -43,16 +43,19 @@ export default function WatchShareButton() {
     return () => window.clearTimeout(timeout)
   }, [copiedOption])
 
-  const copyUrl = useCallback(async (withTimecode: boolean) => {
-    const url = withTimecode
-      ? buildWatchUrl(window.location.pathname, currentTime)
-      : buildWatchUrl(window.location.pathname)
+  const copyUrl = useCallback(
+    async (withTimecode: boolean) => {
+      const url = withTimecode
+        ? buildWatchUrl(window.location.pathname, currentTime)
+        : buildWatchUrl(window.location.pathname)
 
-    const copied = await copyToClipboard(url)
-    if (copied) {
-      setCopiedOption(withTimecode ? 'timecode' : 'url')
-    }
-  }, [currentTime])
+      const copied = await copyToClipboard(url)
+      if (copied) {
+        setCopiedOption(withTimecode ? 'timecode' : 'url')
+      }
+    },
+    [currentTime],
+  )
 
   return (
     <DropdownMenu>
@@ -60,7 +63,7 @@ export default function WatchShareButton() {
         <Button
           variant="outline"
           size="sm"
-          className="px-2 cursor-pointer"
+          className="cursor-pointer px-2"
           aria-label="Share VOD"
         >
           <Share2 className="size-4" />
@@ -69,17 +72,17 @@ export default function WatchShareButton() {
       <DropdownMenuContent
         align="start"
         sideOffset={8}
-        className="min-w-48 rounded-lg border-border/60 bg-popover/95 p-1 shadow-md backdrop-blur-xl"
+        className="border-border/60 bg-popover/95 min-w-48 rounded-lg p-1 shadow-md backdrop-blur-xl"
       >
         <DropdownMenuItem
           onSelect={() => void copyUrl(false)}
           className={cn(
-            'rounded-md p-0 focus:bg-secondary/50 focus:text-foreground',
+            'focus:bg-secondary/50 focus:text-foreground rounded-md p-0',
             'data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground',
             copiedOption === 'url' && 'bg-secondary/40 text-foreground',
           )}
         >
-          <span className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors">
+          <span className="text-muted-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors">
             {copiedOption === 'url' ? (
               <Check className="size-4" />
             ) : (
@@ -91,12 +94,12 @@ export default function WatchShareButton() {
         <DropdownMenuItem
           onSelect={() => void copyUrl(true)}
           className={cn(
-            'rounded-md p-0 focus:bg-secondary/50 focus:text-foreground',
+            'focus:bg-secondary/50 focus:text-foreground rounded-md p-0',
             'data-[highlighted]:bg-secondary/50 data-[highlighted]:text-foreground',
             copiedOption === 'timecode' && 'bg-secondary/40 text-foreground',
           )}
         >
-          <span className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors">
+          <span className="text-muted-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors">
             {copiedOption === 'timecode' ? (
               <Check className="size-4" />
             ) : (

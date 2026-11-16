@@ -41,57 +41,51 @@ const videoLabel = (count: number) =>
       />
 
       <ol class="relative m-0 list-none">
-        {
-          sortedYears.map((year, yearIndex) => {
-            const months = vodsByYear.get(year)!
-            const isFirst = yearIndex === 0
-            const isLast = yearIndex === sortedYears.length - 1
+        {sortedYears.map((year, yearIndex) => {
+          const months = vodsByYear.get(year)!
+          const isFirst = yearIndex === 0
+          const isLast = yearIndex === sortedYears.length - 1
 
-            return (
-              <li class={cn('flex gap-4 sm:gap-5', !isLast && 'pb-10')}>
-                <div class="relative z-10 flex h-9 w-3 shrink-0 items-center justify-center">
-                  <span
-                    class={cn(
-                      'timeline-dot size-3 shrink-0 rounded-full border-2 border-background bg-border ring-2 ring-border',
-                      isFirst && 'bg-accent ring-accent/30',
-                    )}
-                    aria-hidden="true"
-                  />
+          return (
+            <li class={cn('flex gap-4 sm:gap-5', !isLast && 'pb-10')}>
+              <div class="relative z-10 flex h-9 w-3 shrink-0 items-center justify-center">
+                <span
+                  class={cn(
+                    'timeline-dot size-3 shrink-0 rounded-full border-2 border-background bg-border ring-2 ring-border',
+                    isFirst && 'bg-accent ring-accent/30',
+                  )}
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <h2 class="flex h-9 items-center text-3xl font-bold tracking-tight">
+                  {year}
+                </h2>
+
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {months.map((month) => (
+                    <Card className="transition-colors hover:border-border hover:bg-secondary/50">
+                      <a
+                        href={`/collection/${month.slug}`}
+                        class="block h-full"
+                      >
+                        <CardHeader className="space-y-0">
+                          <CardTitle className="text-center text-2xl">
+                            {month.label.split(' ')[0]}
+                          </CardTitle>
+                          <CardDescription className="text-center">
+                            {videoLabel(month.vodCount)}
+                          </CardDescription>
+                        </CardHeader>
+                      </a>
+                    </Card>
+                  ))}
                 </div>
-
-                <div class="min-w-0 flex-1">
-                  <h2
-                    class="flex h-9 items-center text-3xl font-bold tracking-tight"
-                  >
-                    {year}
-                  </h2>
-
-                  <div class="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {
-                      months.map((month) => (
-                        <Card className="transition-colors hover:border-border hover:bg-secondary/50">
-                          <a
-                            href={`/collection/${month.slug}`}
-                            class="block h-full"
-                          >
-                            <CardHeader className="space-y-0">
-                              <CardTitle className="text-center text-2xl">
-                                {month.label.split(' ')[0]}
-                              </CardTitle>
-                              <CardDescription className="text-center">
-                                {videoLabel(month.vodCount)}
-                              </CardDescription>
-                            </CardHeader>
-                          </a>
-                        </Card>
-                      ))
-                    }
-                  </div>
-                </div>
-              </li>
-            )
-          })
-        }
+              </div>
+            </li>
+          )
+        })}
       </ol>
     </div>
   </main>
@@ -100,9 +94,7 @@ const videoLabel = (count: number) =>
 <script>
   const sizeCollectionTimeline = () => {
     const root = document.querySelector('[data-collection-timeline]')
-    const spine = root?.querySelector(
-      '.timeline-spine',
-    ) as HTMLElement | null
+    const spine = root?.querySelector('.timeline-spine') as HTMLElement | null
     const firstDot = root?.querySelector('.timeline-dot')
     const lastDot = root?.querySelector('li:last-child .timeline-dot')
 

@@ -1,6 +1,6 @@
 ---
-import { Icon } from 'astro-icon/components'
 import { SITE } from '@/consts'
+import { Icon } from 'astro-icon/components'
 ---
 
 <div class="site-search" id="site-search">
@@ -27,7 +27,9 @@ import { SITE } from '@/consts'
       aria-controls="site-search-results"
       aria-autocomplete="list"
     />
-    <kbd class="site-search-kbd" id="site-search-kbd" aria-hidden="true">/</kbd>
+    <kbd class="site-search-kbd" id="site-search-kbd" aria-hidden="true">
+      /
+    </kbd>
   </label>
   <div
     class="site-search-dropdown"
@@ -42,7 +44,11 @@ import { SITE } from '@/consts'
   </div>
 </div>
 
-<div class="site-search-overlay" id="site-search-overlay" aria-hidden="true"></div>
+<div
+  class="site-search-overlay"
+  id="site-search-overlay"
+  aria-hidden="true"
+></div>
 
 <script>
   import {
@@ -81,7 +87,9 @@ import { SITE } from '@/consts'
     if (!query.trim()) return escapeHtml(text)
     const terms = queryTerms(query)
     if (terms.length === 0) return escapeHtml(text)
-    const escaped = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    const escaped = terms.map((term) =>
+      term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+    )
     const pattern = new RegExp(`(${escaped.join('|')})`, 'gi')
     return escapeHtml(text).replace(pattern, '<mark>$1</mark>')
   }
@@ -184,51 +192,53 @@ import { SITE } from '@/consts'
     }
 
     function renderResults(query: string) {
-    if (!searchIndex) return
+      if (!searchIndex) return
 
-    const q = query.trim()
-    if (!q) {
-      closeResults()
-      return
-    }
+      const q = query.trim()
+      if (!q) {
+        closeResults()
+        return
+      }
 
-    const scored = searchIndex
-      .map((item) => ({ item, score: scoreSearchItem(item, q) }))
-      .filter((result) => result.score > 0)
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score
-        const aDate = a.item.date ?? ''
-        const bDate = b.item.date ?? ''
-        return bDate.localeCompare(aDate)
-      })
-      .slice(0, 8)
+      const scored = searchIndex
+        .map((item) => ({ item, score: scoreSearchItem(item, q) }))
+        .filter((result) => result.score > 0)
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score
+          const aDate = a.item.date ?? ''
+          const bDate = b.item.date ?? ''
+          return bDate.localeCompare(aDate)
+        })
+        .slice(0, 8)
 
-    els.dropdown.querySelectorAll('.site-search-result, .site-search-results-header').forEach((el) => el.remove())
-    activeIndex = -1
+      els.dropdown
+        .querySelectorAll('.site-search-result, .site-search-results-header')
+        .forEach((el) => el.remove())
+      activeIndex = -1
 
-    if (scored.length === 0) {
-      els.emptyEl.style.display = 'flex'
-      openDropdown()
-      return
-    }
+      if (scored.length === 0) {
+        els.emptyEl.style.display = 'flex'
+        openDropdown()
+        return
+      }
 
-    els.emptyEl.style.display = 'none'
+      els.emptyEl.style.display = 'none'
 
-    const header = document.createElement('div')
-    header.className = 'site-search-results-header'
-    header.innerHTML = `<span>${scored.length} result${scored.length === 1 ? '' : 's'}</span>`
-    els.dropdown.appendChild(header)
+      const header = document.createElement('div')
+      header.className = 'site-search-results-header'
+      header.innerHTML = `<span>${scored.length} result${scored.length === 1 ? '' : 's'}</span>`
+      els.dropdown.appendChild(header)
 
-    scored.forEach((result, index) => {
-      const link = document.createElement('a')
-      link.href = result.item.href
-      link.className = 'site-search-result'
-      link.setAttribute('role', 'option')
-      link.setAttribute('aria-selected', 'false')
-      link.id = `site-search-result-${index}`
-      link.dataset.astroTransition = 'animate'
+      scored.forEach((result, index) => {
+        const link = document.createElement('a')
+        link.href = result.item.href
+        link.className = 'site-search-result'
+        link.setAttribute('role', 'option')
+        link.setAttribute('aria-selected', 'false')
+        link.id = `site-search-result-${index}`
+        link.dataset.astroTransition = 'animate'
 
-      link.innerHTML = `
+        link.innerHTML = `
         <span class="site-search-result-icon" aria-hidden="true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${resultIconMarkup(result.item.type)}</svg>
         </span>
@@ -247,12 +257,12 @@ import { SITE } from '@/consts'
         </span>
       `
 
-      link.addEventListener('mouseenter', () => setActive(index))
-      els.dropdown.appendChild(link)
-    })
+        link.addEventListener('mouseenter', () => setActive(index))
+        els.dropdown.appendChild(link)
+      })
 
-    openDropdown()
-  }
+      openDropdown()
+    }
 
     function openMobileSearch() {
       els.wrapper.classList.add('is-mobile-open')
@@ -282,30 +292,36 @@ import { SITE } from '@/consts'
 
     function setActive(index: number) {
       const items = els.dropdown.querySelectorAll('.site-search-result')
-    items.forEach((element, itemIndex) => {
-      element.classList.toggle('active', itemIndex === index)
-      element.setAttribute('aria-selected', itemIndex === index ? 'true' : 'false')
-    })
-    activeIndex = index
-    if (index >= 0 && items[index]) {
-      els.input.setAttribute('aria-activedescendant', `site-search-result-${index}`)
-      items[index].scrollIntoView({ block: 'nearest' })
-    } else {
-      els.input.removeAttribute('aria-activedescendant')
-    }
+      items.forEach((element, itemIndex) => {
+        element.classList.toggle('active', itemIndex === index)
+        element.setAttribute(
+          'aria-selected',
+          itemIndex === index ? 'true' : 'false',
+        )
+      })
+      activeIndex = index
+      if (index >= 0 && items[index]) {
+        els.input.setAttribute(
+          'aria-activedescendant',
+          `site-search-result-${index}`,
+        )
+        items[index].scrollIntoView({ block: 'nearest' })
+      } else {
+        els.input.removeAttribute('aria-activedescendant')
+      }
     }
 
     function isTypingTarget(): boolean {
-    const active = document.activeElement
-    if (!active) return false
-    const tag = active.tagName.toLowerCase()
-    return (
-      tag === 'input' ||
-      tag === 'textarea' ||
-      tag === 'select' ||
-      (active as HTMLElement).isContentEditable
-    )
-  }
+      const active = document.activeElement
+      if (!active) return false
+      const tag = active.tagName.toLowerCase()
+      return (
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        (active as HTMLElement).isContentEditable
+      )
+    }
 
     els.input.addEventListener(
       'focus',
@@ -331,28 +347,28 @@ import { SITE } from '@/consts'
       'keydown',
       (event) => {
         const items = els.dropdown.querySelectorAll('.site-search-result')
-    const count = items.length
+        const count = items.length
 
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      if (!isOpen && els.input.value.trim()) {
-        renderResults(els.input.value)
-        return
-      }
-      setActive(activeIndex < count - 1 ? activeIndex + 1 : 0)
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      setActive(activeIndex > 0 ? activeIndex - 1 : count - 1)
-    } else if (event.key === 'Enter') {
-      if (activeIndex >= 0 && items[activeIndex]) {
-        event.preventDefault()
-        ;(items[activeIndex] as HTMLAnchorElement).click()
-      }
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-        dismissSearch()
-        els.input.blur()
-      }
+        if (event.key === 'ArrowDown') {
+          event.preventDefault()
+          if (!isOpen && els.input.value.trim()) {
+            renderResults(els.input.value)
+            return
+          }
+          setActive(activeIndex < count - 1 ? activeIndex + 1 : 0)
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault()
+          setActive(activeIndex > 0 ? activeIndex - 1 : count - 1)
+        } else if (event.key === 'Enter') {
+          if (activeIndex >= 0 && items[activeIndex]) {
+            event.preventDefault()
+            ;(items[activeIndex] as HTMLAnchorElement).click()
+          }
+        } else if (event.key === 'Escape') {
+          event.preventDefault()
+          dismissSearch()
+          els.input.blur()
+        }
       },
       { signal },
     )
@@ -579,7 +595,9 @@ import { SITE } from '@/consts'
       text-overflow: ellipsis;
       white-space: nowrap;
       pointer-events: none;
-      transition: opacity 0.2s ease, max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:
+        opacity 0.2s ease,
+        max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .site-search-box {
@@ -730,17 +748,20 @@ import { SITE } from '@/consts'
     background-color: hsl(var(--secondary) / 0.85);
   }
 
-  .site-search-dropdown :global(.site-search-result.active .site-search-result-title) {
+  .site-search-dropdown
+    :global(.site-search-result.active .site-search-result-title) {
     color: hsl(var(--accent));
   }
 
-  .site-search-dropdown :global(.site-search-result.active .site-search-result-icon) {
+  .site-search-dropdown
+    :global(.site-search-result.active .site-search-result-icon) {
     border-color: hsl(var(--accent) / 0.35);
     background-color: hsl(var(--accent) / 0.12);
     color: hsl(var(--accent));
   }
 
-  .site-search-dropdown :global(.site-search-result.active .site-search-result-arrow) {
+  .site-search-dropdown
+    :global(.site-search-result.active .site-search-result-arrow) {
     opacity: 1;
     transform: translateX(0);
   }
@@ -826,7 +847,8 @@ import { SITE } from '@/consts'
       transform 0.14s ease;
   }
 
-  .site-search-dropdown :global(.site-search-result:hover .site-search-result-arrow) {
+  .site-search-dropdown
+    :global(.site-search-result:hover .site-search-result-arrow) {
     opacity: 0.45;
     transform: translateX(0);
   }

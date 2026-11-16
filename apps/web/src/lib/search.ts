@@ -68,11 +68,7 @@ const FIELD_WEIGHT = {
 
 /** Preserve special characters. Normalize case and whitespace. */
 export function normalizeSearchText(value: string): string {
-  return value
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
+  return value.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
 export function compactSearchText(value: string): string {
@@ -85,7 +81,10 @@ export function tokenizeField(value: string): string[] {
   return Array.from(new Set(chunks))
 }
 
-export function buildSearchBlob(parts: string[]): { text: string; compact: string } {
+export function buildSearchBlob(parts: string[]): {
+  text: string
+  compact: string
+} {
   const text = parts.map(normalizeSearchText).filter(Boolean).join(' ')
   return { text, compact: compactSearchText(text) }
 }
@@ -94,7 +93,11 @@ export function queryTerms(query: string): string[] {
   return normalizeSearchText(query).split(/\s+/).filter(Boolean)
 }
 
-function termMatchesToken(token: string, term: string, termCompact: string): boolean {
+function termMatchesToken(
+  token: string,
+  term: string,
+  termCompact: string,
+): boolean {
   if (!term) return false
   if (token === term) return true
   if (token.startsWith(term)) return true
@@ -109,7 +112,11 @@ function termMatchesToken(token: string, term: string, termCompact: string): boo
   return false
 }
 
-function termMatchesList(tokens: string[] | undefined, term: string, termCompact: string): boolean {
+function termMatchesList(
+  tokens: string[] | undefined,
+  term: string,
+  termCompact: string,
+): boolean {
   if (!tokens?.length) return false
   return tokens.some((token) => termMatchesToken(token, term, termCompact))
 }
@@ -132,7 +139,11 @@ function scoreTermAgainstWeights(
     if (termMatchesList(weights.game, term, termCompact)) {
       const exact = weights.game!.some((t) => t === term)
       const prefix = weights.game!.some((t) => t.startsWith(term))
-      return exact ? FIELD_WEIGHT.gameExact : prefix ? FIELD_WEIGHT.gamePrefix : FIELD_WEIGHT.gamePrefix - 4
+      return exact
+        ? FIELD_WEIGHT.gameExact
+        : prefix
+          ? FIELD_WEIGHT.gamePrefix
+          : FIELD_WEIGHT.gamePrefix - 4
     }
   }
 
@@ -140,25 +151,42 @@ function scoreTermAgainstWeights(
     if (termMatchesList(weights.show, term, termCompact)) {
       const exact = weights.show!.some((t) => t === term)
       const prefix = weights.show!.some((t) => t.startsWith(term))
-      return exact ? FIELD_WEIGHT.showExact : prefix ? FIELD_WEIGHT.showPrefix : FIELD_WEIGHT.showPrefix - 4
+      return exact
+        ? FIELD_WEIGHT.showExact
+        : prefix
+          ? FIELD_WEIGHT.showPrefix
+          : FIELD_WEIGHT.showPrefix - 4
     }
     if (termMatchesList(weights.season, term, termCompact)) {
       const exact = weights.season!.some((t) => t === term)
       const prefix = weights.season!.some((t) => t.startsWith(term))
-      return exact ? FIELD_WEIGHT.seasonExact : prefix ? FIELD_WEIGHT.seasonPrefix : FIELD_WEIGHT.seasonPrefix - 3
+      return exact
+        ? FIELD_WEIGHT.seasonExact
+        : prefix
+          ? FIELD_WEIGHT.seasonPrefix
+          : FIELD_WEIGHT.seasonPrefix - 3
     }
   }
 
   if (termMatchesList(weights.date, term, termCompact)) {
     const exact = weights.date!.some((t) => t === term)
     const prefix = weights.date!.some((t) => t.startsWith(term))
-    return exact ? FIELD_WEIGHT.dateExact : prefix ? FIELD_WEIGHT.datePrefix : FIELD_WEIGHT.datePrefix - 2
+    return exact
+      ? FIELD_WEIGHT.dateExact
+      : prefix
+        ? FIELD_WEIGHT.datePrefix
+        : FIELD_WEIGHT.datePrefix - 2
   }
 
   return FIELD_WEIGHT.generic
 }
 
-function textIncludesTerm(text: string, compact: string, term: string, termCompact: string): boolean {
+function textIncludesTerm(
+  text: string,
+  compact: string,
+  term: string,
+  termCompact: string,
+): boolean {
   if (text.includes(term)) return true
   if (termCompact.length >= 2 && compact.includes(termCompact)) return true
   return false
@@ -175,7 +203,8 @@ function getTitleMatchQuality(
   const titleCompact = compactSearchText(item.title)
   const rawLower = raw.toLowerCase()
 
-  if (rawLower === item.title.toLowerCase() || titleNorm === rawNorm) return 'exact'
+  if (rawLower === item.title.toLowerCase() || titleNorm === rawNorm)
+    return 'exact'
   if (rawCompact.length >= 2 && titleCompact === rawCompact) return 'exact'
 
   if (
@@ -187,7 +216,9 @@ function getTitleMatchQuality(
 
   const allTermsInTitle =
     terms.length > 0 &&
-    terms.every((term) => termMatchesList(item._w.title, term, compactSearchText(term)))
+    terms.every((term) =>
+      termMatchesList(item._w.title, term, compactSearchText(term)),
+    )
 
   if (allTermsInTitle) return 'strong'
 
@@ -198,7 +229,11 @@ function getTitleMatchQuality(
     return 'partial'
   }
 
-  if (terms.some((term) => termMatchesList(item._w.title, term, compactSearchText(term)))) {
+  if (
+    terms.some((term) =>
+      termMatchesList(item._w.title, term, compactSearchText(term)),
+    )
+  ) {
     return 'partial'
   }
 
@@ -224,13 +259,16 @@ export function isGoodMetaMatch(
     const matchedTitleTerms = terms.filter((term) =>
       termMatchesList(item._w.title, term, compactSearchText(term)),
     )
-    return matchedTitleTerms.length >= Math.min(terms.length, item._w.title.length)
+    return (
+      matchedTitleTerms.length >= Math.min(terms.length, item._w.title.length)
+    )
   }
 
   if (item.type === 'date') {
     const monthMatched = terms.some((term) =>
       item._w.date?.some(
-        (token) => token === term || token.startsWith(term) || term.startsWith(token),
+        (token) =>
+          token === term || token.startsWith(term) || term.startsWith(token),
       ),
     )
     const yearMatched = terms.some(
@@ -260,14 +298,30 @@ export function scoreSearchItem(item: SearchIndexItem, query: string): number {
   for (const term of terms) {
     const termCompact = compactSearchText(term)
     const matches =
-      textIncludesTerm(item.searchText, item.searchCompact, term, termCompact) ||
+      textIncludesTerm(
+        item.searchText,
+        item.searchCompact,
+        term,
+        termCompact,
+      ) ||
       textIncludesTerm(titleNorm, titleCompact, term, termCompact) ||
-      textIncludesTerm(subtitleNorm, compactSearchText(item.subtitle), term, termCompact)
+      textIncludesTerm(
+        subtitleNorm,
+        compactSearchText(item.subtitle),
+        term,
+        termCompact,
+      )
 
     if (!matches) return -1
   }
 
-  const titleQuality = getTitleMatchQuality(item, raw, rawNorm, rawCompact, terms)
+  const titleQuality = getTitleMatchQuality(
+    item,
+    raw,
+    rawNorm,
+    rawCompact,
+    terms,
+  )
   const goodMeta = isGoodMetaMatch(item, titleQuality, terms)
 
   let score = SEARCH_TYPE_TIER[item.type]
@@ -276,23 +330,33 @@ export function scoreSearchItem(item: SearchIndexItem, query: string): number {
   if (goodMeta) score += GOOD_META_MATCH_BOOST
 
   for (const term of terms) {
-    score += scoreTermAgainstWeights(term, compactSearchText(term), item._w, item.type)
+    score += scoreTermAgainstWeights(
+      term,
+      compactSearchText(term),
+      item._w,
+      item.type,
+    )
   }
 
-  if (item.type === 'game' && (titleNorm.includes(rawNorm) || titleCompact.includes(rawCompact))) {
+  if (
+    item.type === 'game' &&
+    (titleNorm.includes(rawNorm) || titleCompact.includes(rawCompact))
+  ) {
     score += 20
   }
 
   if (item.type === 'date') {
     for (const term of terms) {
-      if (item._w.date?.some((t) => t === term || t.startsWith(term))) score += 10
+      if (item._w.date?.some((t) => t === term || t.startsWith(term)))
+        score += 10
     }
   }
 
   // Recency only nudges VODs. Not episodes or "browse" pages.
   if (item.type === 'vod' && item.date) {
     const ageBoost =
-      1 / (1 + (Date.now() - Date.parse(item.date)) / (1000 * 60 * 60 * 24 * 30))
+      1 /
+      (1 + (Date.now() - Date.parse(item.date)) / (1000 * 60 * 60 * 24 * 30))
     score += ageBoost
   }
 
@@ -312,8 +376,12 @@ export function buildDateTokens(date: Date): string[] {
   const monthNumPadded = monthNum.padStart(2, '0')
   const day = date.getDate().toString()
   const dayPadded = day.padStart(2, '0')
-  const monthName = date.toLocaleString('en-US', { month: 'long' }).toLowerCase()
-  const monthShort = date.toLocaleString('en-US', { month: 'short' }).toLowerCase()
+  const monthName = date
+    .toLocaleString('en-US', { month: 'long' })
+    .toLowerCase()
+  const monthShort = date
+    .toLocaleString('en-US', { month: 'short' })
+    .toLowerCase()
 
   return [
     year,
