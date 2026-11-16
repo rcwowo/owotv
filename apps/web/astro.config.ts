@@ -1,7 +1,6 @@
 import cloudflare from '@astrojs/cloudflare'
 import { cacheCloudflare } from '@astrojs/cloudflare/cache'
 import react from '@astrojs/react'
-import sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 
@@ -22,7 +21,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  integrations: [sitemap(), react(), icon()],
+  integrations: [react(), icon()],
   server: {
     port: 1234,
     host: true,
