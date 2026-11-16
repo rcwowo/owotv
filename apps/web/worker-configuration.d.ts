@@ -4,8 +4,6 @@
 interface __BaseEnv_Env {
 	BUCKET: R2Bucket;
 	DB: D1Database;
-	BASEROW_DB_TOKEN: string;
-	S3_BASE_URL: string;
 }
 declare namespace Cloudflare {
 	interface Env extends __BaseEnv_Env {}
@@ -14,9 +12,6 @@ interface Env extends __BaseEnv_Env {}
 type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
-declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "BASEROW_DB_TOKEN" | "S3_BASE_URL">> {}
-}
 declare module "*.txt" {
 	const value: string;
 	export default value;

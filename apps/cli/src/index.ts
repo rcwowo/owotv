@@ -2,7 +2,6 @@ import { channel } from './commands/channel'
 import { chat } from './commands/chat'
 import { instance } from './commands/instance'
 import { login, whoami } from './commands/login'
-import { migrate, usage as migrateUsage } from './commands/migrate'
 import { episode, season, show } from './commands/show'
 import { token } from './commands/token'
 import { vod } from './commands/vod'
@@ -19,11 +18,6 @@ const commands = {
   season,
   episode,
   token,
-  migrate: {
-    summary: 'One-time import from Baserow',
-    usage: migrateUsage,
-    run: migrate,
-  },
 }
 
 const usage = `owotv <command>

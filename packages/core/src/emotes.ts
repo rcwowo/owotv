@@ -1,5 +1,4 @@
-import { emoteSetKey, type EmoteSet } from '@owotv/shared'
-import type { BucketLike } from './store'
+import type { EmoteSet } from '@owotv/shared'
 
 interface SevenTvResponse {
   data?: {
@@ -65,19 +64,4 @@ export async function encodeEmoteSet(
   if (!entries.length) return null
   const body = JSON.stringify(Object.fromEntries(entries))
   return { hash: (await sha256Hex(body)).slice(0, 16), body }
-}
-
-export async function writeEmoteSet(
-  bucket: BucketLike,
-  emotes: EmoteSet,
-): Promise<string | null> {
-  const encoded = await encodeEmoteSet(emotes)
-  if (!encoded) return null
-  const key = emoteSetKey(encoded.hash)
-  if (!(await bucket.head(key))) {
-    await bucket.put(key, encoded.body, {
-      httpMetadata: { contentType: 'application/json' },
-    })
-  }
-  return encoded.hash
 }
