@@ -1,0 +1,50 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PaginationComponent from '@/components/ui/pagination'
+import VodCard from '@/components/vods/VodCard.astro'
+import { SITE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { isMultiChannel } from '@/lib/channels'
+import { countVods, listVods } from '@/lib/data'
+
+const pageParam = Astro.params.page
+const currentPage = pageParam === undefined ? 1 : Number(pageParam)
+if (!Number.isInteger(currentPage) || currentPage < 1 || pageParam === '1') {
+  return new Response(null, { status: 404 })
+}
+
+const pageSize = SITE.VODS_PER_PAGE
+const [vods, total, multiChannel] = await Promise.all([
+  listVods({}, { limit: pageSize, offset: (currentPage - 1) * pageSize }),
+  countVods(),
+  isMultiChannel(),
+])
+const lastPage = Math.max(1, Math.ceil(total / pageSize))
+if (currentPage > lastPage) return new Response(null, { status: 404 })
+---
+
+<Layout title="Browse" description="Archive of all Twitch streams">
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
+    <div class="py-4 space-y-4">
+      <Breadcrumbs
+        items={[{ label: `Page ${currentPage}`, icon: 'lucide:folder-open' }]}
+      />
+      <h1 class="text-4xl font-bold tracking-tight">VODs</h1>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {vods.map((vod) => (
+        <VodCard vod={vod} showChannel={multiChannel} />
+      ))}
+    </div>
+
+    <div class="py-4">
+      <PaginationComponent
+        currentPage={currentPage}
+        totalPages={lastPage}
+        baseUrl="/vods/"
+        client:load
+      />
+    </div>
+  </main>
+</Layout>

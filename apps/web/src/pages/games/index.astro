@@ -1,0 +1,27 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import GameCard from '@/components/vods/GameCard.astro'
+import Layout from '@/layouts/Layout.astro'
+import { listGames } from '@/lib/data'
+
+const games = (await listGames()).sort((a, b) => b.vodCount - a.vodCount)
+---
+
+<Layout title="Streamed Games" description="Browse Twitch streams by game">
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
+    <div class="py-4">
+      <Breadcrumbs items={[{ label: 'Games', icon: 'lucide:gamepad-2' }]} />
+    </div>
+    <h1 class="mb-8 text-4xl font-bold">Streamed Games</h1>
+    <div class="grid gap-4 mb-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      {games.map((game) => (
+        <GameCard
+          slug={game.slug}
+          game={game.name}
+          coverUrl={game.coverUrl ?? ''}
+          vodCount={game.vodCount}
+        />
+      ))}
+    </div>
+  </main>
+</Layout>

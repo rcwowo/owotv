@@ -1,0 +1,161 @@
+---
+import Container from '@/components/Container.astro'
+import Link from '@/components/Link.astro'
+import Logo from '@/components/Logo.astro'
+import SiteSearch from '@/components/SiteSearch.astro'
+import MobileMenu from '@/components/ui/mobile-menu'
+import { NAV_LINKS } from '@/consts'
+import { isMultiChannel } from '@/lib/channels'
+
+const links = (await isMultiChannel())
+  ? [{ href: '/channels', label: 'Channels' }, ...NAV_LINKS]
+  : NAV_LINKS
+---
+
+<header
+  class="site-header top-0 z-50 w-full border-b border-border/40 bg-background/75 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
+  transition:persist="site-header"
+  transition:animate="none"
+>
+  <Container>
+    <nav class="header-nav flex h-14 items-center justify-between gap-4">
+      <div class="header-nav-left flex min-w-0 items-center gap-6">
+        <MobileMenu links={links} client:load />
+
+        <Logo class="header-logo" />
+
+        <div class="hidden items-center gap-1 sm:flex">
+          {links.map((item) => (
+            <Link
+              href={item.href}
+              data-nav-link
+              class="nav-link rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-secondary/50 hover:text-foreground"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div class="header-nav-right flex items-center gap-2 sm:gap-3">
+        <SiteSearch />
+      </div>
+    </nav>
+  </Container>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+  }
+
+  @media (width < 40rem) {
+    .header-nav {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+    }
+
+    .header-nav-left {
+      display: contents;
+    }
+
+    .header-nav-right {
+      grid-column: 3;
+      justify-self: end;
+    }
+
+    :global(.header-menu-trigger) {
+      grid-column: 1;
+      justify-self: start;
+    }
+
+    .header-logo {
+      grid-column: 2;
+      justify-self: center;
+    }
+  }
+
+  :global(html[data-header-overlay]) .site-header {
+    position: fixed;
+    border-color: hsl(var(--border) / 0.35);
+    background-color: hsl(var(--background) / 0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  :global(html[data-header-overlay]) .nav-link {
+    color: hsl(var(--foreground) / 0.82);
+  }
+
+  :global(html[data-header-overlay]) .nav-link:hover {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.55);
+  }
+
+  :global(.header-menu-trigger) {
+    border-style: solid;
+    border-width: 1px;
+    border-color: hsl(var(--border) / 0.6);
+    background-color: hsl(var(--secondary) / 0.4);
+    color: hsl(var(--muted-foreground));
+  }
+
+  :global(.header-menu-trigger:hover),
+  :global(.header-menu-trigger[data-state='open']) {
+    background-color: hsl(var(--secondary) / 0.6);
+    color: hsl(var(--foreground));
+  }
+
+  :global(html[data-header-overlay] .site-search-mobile-trigger) {
+    border-color: hsl(var(--border) / 0.5);
+    background-color: hsl(var(--secondary) / 0.45);
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  :global(html[data-header-overlay] .site-search-mobile-trigger:hover) {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.6);
+  }
+
+  :global(html[data-header-overlay] .header-menu-trigger) {
+    border-color: hsl(var(--border) / 0.5);
+    background-color: hsl(var(--secondary) / 0.45);
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  :global(html[data-header-overlay] .header-menu-trigger:hover) {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary) / 0.6);
+  }
+
+  :global([data-nav-link].is-active) {
+    background-color: hsl(var(--secondary) / 0.8);
+    color: hsl(var(--foreground));
+  }
+
+  :global([data-nav-link].is-active:hover) {
+    background-color: hsl(var(--secondary) / 0.8);
+    color: hsl(var(--foreground));
+  }
+
+  :global(html[data-header-overlay] [data-nav-link].is-active) {
+    background-color: hsl(var(--secondary) / 0.65);
+    color: hsl(var(--foreground));
+  }
+</style>
+
+<script is:inline>
+  function updateHeaderNav() {
+    const path = window.location.pathname
+    document.querySelectorAll('[data-nav-link]').forEach((link) => {
+      const href = link.getAttribute('href')
+      if (!href) return
+      const active = path === href || path.startsWith(`${href}/`)
+      link.classList.toggle('is-active', active)
+    })
+  }
+
+  document.addEventListener('astro:after-swap', updateHeaderNav)
+  document.addEventListener('astro:page-load', updateHeaderNav)
+</script>

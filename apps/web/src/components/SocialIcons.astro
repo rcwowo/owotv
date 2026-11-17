@@ -1,0 +1,60 @@
+---
+import Link from '@/components/Link.astro'
+import { buttonVariants } from '@/components/ui/button'
+import type { Link as SocialLink } from '@/consts'
+import { cn } from '@/lib/utils'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  links: SocialLink[]
+  className?: string
+  large?: boolean
+}
+
+const { links, className, large } = Astro.props
+
+const iconMap = {
+  Website: 'lucide:globe',
+  GitHub: 'lucide:github',
+  GitLab: 'lucide:gitlab',
+  LinkedIn: 'lucide:linkedin',
+  YouTube: 'lucide:youtube',
+  Twitch: 'lucide:twitch',
+  Twitter: 'lucide:twitter',
+  Bluesky: 'mingcute:bluesky-social-line',
+  Discord: 'mingcute:discord-line',
+  Instagram: 'lucide:instagram',
+  Email: 'lucide:mail',
+  RSS: 'lucide:rss',
+}
+
+const getSocialLink = ({ href, label }: SocialLink) => ({
+  href: label === 'Email' ? `mailto:${href}` : href,
+  ariaLabel: label,
+  iconName:
+    iconMap[label as keyof typeof iconMap] || 'lucide:message-circle-question',
+})
+---
+
+<ul class={cn('not-prose flex flex-wrap gap-2', className)} role="list">
+  {links.map((link) => {
+    const { href, ariaLabel, iconName } = getSocialLink(link)
+    return (
+      <li>
+        <Link
+          href={href}
+          aria-label={ariaLabel}
+          title={ariaLabel}
+          class={cn(
+            buttonVariants({ variant: 'outline', size: large ? 'lg' : 'icon' }),
+            large ? 'w-full gap-2' : 'gap-2',
+          )}
+          external
+        >
+          <Icon name={iconName} class="size-4 min-w-4 min-h-4" />
+          {large && <p class="text-sm">{ariaLabel}</p>}
+        </Link>
+      </li>
+    )
+  })}
+</ul>

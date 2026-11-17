@@ -1,0 +1,53 @@
+---
+import ChannelHero from '@/components/channels/ChannelHero.astro'
+import Container from '@/components/Container.astro'
+import Footer from '@/components/Footer.astro'
+import ShowCard from '@/components/shows/ShowCard.astro'
+import Layout from '@/layouts/Layout.astro'
+import { channelPath, getChannelForPage } from '@/lib/channels'
+import { countVods, listVods } from '@/lib/data'
+import { getShows } from '@/lib/shows'
+
+const found = await getChannelForPage(Astro.params.slug ?? '')
+if (!found) return new Response(null, { status: 404 })
+const { channel, redirect } = found
+if (redirect) return Astro.redirect(`${channelPath(redirect)}/shows`, 301)
+
+const [shows, vodCount, [latest]] = await Promise.all([
+  getShows({ channelId: channel.id }),
+  countVods({ channelId: channel.id }),
+  listVods({ channelId: channel.id }, { limit: 1 }),
+])
+---
+
+<Layout
+  title={`${channel.displayName} Shows`}
+  description={`Shows from ${channel.displayName}`}
+  image={channel.bannerUrl ?? channel.avatarUrl ?? latest?.thumbnailUrl}
+  headerOverlay
+  className="gap-y-0"
+>
+  <ChannelHero
+    channel={channel}
+    tab="shows"
+    vodCount={vodCount}
+    showCount={shows.length}
+    fallbackImage={latest?.thumbnailUrl}
+  />
+
+  <Container class="py-8">
+    {shows.length > 0 ? (
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {shows.map((show) => (
+          <ShowCard show={show} />
+        ))}
+      </div>
+    ) : (
+      <p class="py-16 text-center text-muted-foreground">
+        {channel.displayName} doesn’t have any shows yet.
+      </p>
+    )}
+  </Container>
+
+  <Footer />
+</Layout>

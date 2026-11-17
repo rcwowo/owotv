@@ -1,0 +1,54 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import VodCard from '@/components/vods/VodCard.astro'
+import Layout from '@/layouts/Layout.astro'
+import { isMultiChannel } from '@/lib/channels'
+import { getGame, listVods } from '@/lib/data'
+
+const gameSlug = Astro.params.game ?? ''
+const [gameRow, vods, multiChannel] = await Promise.all([
+  getGame(gameSlug),
+  listVods({ gameSlug }),
+  isMultiChannel(),
+])
+if (!gameRow || vods.length === 0) return new Response(null, { status: 404 })
+const game = gameRow.name
+const coverUrl = gameRow.coverUrl ?? ''
+---
+
+<Layout
+  title={`${game} VODs`}
+  description={`Archive of Twitch streams playing ${game}`}
+  image={coverUrl}
+>
+  <main class="mx-auto max-w-(--breakpoint-xl) px-4 sm:px-6 lg:px-8">
+    <div class="py-4">
+      <Breadcrumbs
+        items={[
+          { href: '/games', label: 'Games', icon: 'lucide:gamepad-2' },
+          { label: game, icon: 'lucide:gamepad' },
+        ]}
+      />
+    </div>
+    <div class="flex flex-row items-center mb-8">
+      {coverUrl && (
+        <img
+          src={coverUrl}
+          alt=""
+          class="aspect-3/4 max-h-32 mr-4 rounded-xl object-cover"
+        />
+      )}
+      <div class="flex flex-col">
+        <h1 class="text-4xl font-bold flex items-center">{game}</h1>
+        <p class="text-muted-foreground">
+          {vods.length} stream{vods.length === 1 ? '' : 's'}
+        </p>
+      </div>
+    </div>
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {vods.map((vod) => (
+        <VodCard vod={vod} showChannel={multiChannel} />
+      ))}
+    </div>
+  </main>
+</Layout>

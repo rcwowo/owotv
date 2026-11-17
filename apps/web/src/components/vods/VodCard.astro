@@ -1,0 +1,61 @@
+---
+import ChannelAvatar from '@/components/channels/ChannelAvatar.astro'
+import type { VodSummary } from '@/lib/data'
+import { formatStreamDate } from '@/lib/date'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  vod: VodSummary
+  /** Show whose VOD it is. Set when more than one channel is archived. */
+  showChannel?: boolean
+}
+
+const { vod, showChannel = false } = Astro.props
+const subtitle = [showChannel && vod.channel.displayName, vod.game?.name]
+  .filter(Boolean)
+  .join(' • ')
+---
+
+<div class="relative aspect-video">
+  <a
+    href={`/watch/${vod.slug}`}
+    class="group relative block h-full w-full overflow-hidden rounded-xl border border-border/60 bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+  >
+    <img
+      src={vod.thumbnailUrl}
+      alt={vod.title}
+      loading="lazy"
+      class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+    />
+
+    <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+    <div class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2">
+      <span class="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+        {formatStreamDate(vod.streamedAt)}
+      </span>
+      <span class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+        <Icon name="lucide:clock" class="size-3 shrink-0 opacity-80" />
+        {vod.duration}
+      </span>
+    </div>
+
+    {showChannel && (
+      <div class="pointer-events-none absolute bottom-2 left-2 z-20 flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-full border border-white/10 bg-black/55 py-0.5 pl-0.5 pr-2.5 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-0">
+        <ChannelAvatar channel={vod.channel} class="size-5 text-[10px]" />
+        <span class="truncate text-xs font-medium text-white">
+          {vod.channel.displayName}
+        </span>
+      </div>
+    )}
+
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <p class="text-xs font-medium leading-tight text-white line-clamp-2">
+        {vod.title}
+      </p>
+      <p class="truncate text-[11px] leading-tight text-white/65">{subtitle}</p>
+    </div>
+
+    <div class="pointer-events-none absolute left-[-30%] top-0 z-10 h-full w-1/3 -skew-x-12 bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100"></div>
+  </a>
+</div>

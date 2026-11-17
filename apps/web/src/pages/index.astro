@@ -1,0 +1,160 @@
+---
+import ChannelShowcase from '@/components/channels/ChannelShowcase.astro'
+import Container from '@/components/Container.astro'
+import ContentRow from '@/components/ContentRow.astro'
+import ExplorePanel from '@/components/ExplorePanel.astro'
+import FaqAccordion from '@/components/FaqAccordion'
+import Footer from '@/components/Footer.astro'
+import ShowCard from '@/components/shows/ShowCard.astro'
+import { buttonVariants } from '@/components/ui/button'
+import GameCard from '@/components/vods/GameCard.astro'
+import VodCard from '@/components/vods/VodCard.astro'
+import { SITE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { channelPath, listChannelSummaries } from '@/lib/channels'
+import { listGames, listVods } from '@/lib/data'
+import { formatStreamDate } from '@/lib/date'
+import { getShows } from '@/lib/shows'
+import { cn } from '@/lib/utils'
+import { Icon } from 'astro-icon/components'
+
+const [latestVods, games, shows, channels] = await Promise.all([
+  listVods({}, { limit: 12 }),
+  listGames(),
+  getShows(),
+  listChannelSummaries(),
+])
+const multiChannel = channels.length > 1
+const featuredVod = latestVods[0]
+const recentGames = games.slice(0, 12)
+---
+
+<Layout
+  title="Home"
+  description={SITE.DESCRIPTION}
+  image={featuredVod?.thumbnailUrl}
+  headerOverlay
+  className="gap-y-0"
+>
+  {featuredVod && (
+    <section class="relative h-[min(52vh,32rem)] min-h-80 max-h-128">
+      <div class="absolute inset-0 overflow-hidden">
+        <img
+          src={featuredVod.thumbnailUrl}
+          alt=""
+          class="h-full w-full scale-105 object-cover blur-[2px]"
+          fetchpriority="high"
+        />
+        <div class="absolute inset-0 bg-linear-to-t from-background via-background/75 to-background/25" />
+        <div class="absolute inset-0 bg-linear-to-r from-background/85 via-transparent to-background/35" />
+      </div>
+
+      <div class="relative flex h-full flex-col justify-end pb-8 pt-16 sm:pb-10">
+        <Container class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div class="max-w-3xl space-y-4">
+            <h1 class="font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-[2.5rem]">
+              {featuredVod.title}
+            </h1>
+            <p class="text-sm text-muted-foreground">
+              {multiChannel && (
+                <>
+                  <a
+                    href={channelPath(featuredVod.channel.slug)}
+                    class="font-medium text-foreground hover:text-primary"
+                  >
+                    {featuredVod.channel.displayName}
+                  </a>{' '}
+                  •{' '}
+                </>
+              )}
+              Streamed on {formatStreamDate(featuredVod.streamedAt)} •{' '}
+              {featuredVod.duration}
+            </p>
+            <a
+              href={`/watch/${featuredVod.slug}`}
+              class={cn(
+                buttonVariants({ variant: 'secondary', size: 'lg' }),
+                'h-10 gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-lg hover:bg-primary/90 sm:h-11 sm:px-6',
+              )}
+            >
+              <Icon name="lucide:eye" class="size-4" />
+              Watch VOD
+            </a>
+          </div>
+
+          {featuredVod.game?.coverUrl && (
+            <a
+              href={`/games/${featuredVod.game.slug}`}
+              class="group hidden shrink-0 sm:block"
+            >
+              <img
+                src={featuredVod.game.coverUrl}
+                alt={featuredVod.game.name}
+                class="h-36 w-auto rounded-xl border border-white/10 shadow-2xl transition-transform duration-300 group-hover:scale-[1.03] lg:h-40"
+                width="120"
+                height="176"
+              />
+            </a>
+          )}
+        </Container>
+      </div>
+    </section>
+  )}
+
+  <div class="space-y-10 bg-background py-8 sm:space-y-12 sm:py-10">
+    <ContentRow title="Latest VODs" viewAllHref="/vods">
+      {latestVods.map((vod) => (
+        <div class="w-72 shrink-0 sm:w-80">
+          <VodCard vod={vod} showChannel={multiChannel} />
+        </div>
+      ))}
+    </ContentRow>
+
+    {multiChannel && <ChannelShowcase channels={channels} />}
+
+    {!multiChannel && shows.length > 0 && (
+      <ContentRow title="Featured Shows" viewAllHref="/shows">
+        {shows.map((show) => (
+          <div class="w-72 shrink-0 sm:w-80">
+            <ShowCard show={show} />
+          </div>
+        ))}
+      </ContentRow>
+    )}
+
+    <ContentRow title="Recently Played Games" viewAllHref="/games">
+      {recentGames.map((game) => (
+        <div class="w-28 shrink-0 sm:w-32">
+          <GameCard
+            slug={game.slug}
+            game={game.name}
+            coverUrl={game.coverUrl ?? ''}
+            vodCount={game.vodCount}
+          />
+        </div>
+      ))}
+    </ContentRow>
+
+    <Container>
+      <div class="grid gap-8 lg:grid-cols-2 lg:gap-10">
+        <div class="flex flex-col gap-4">
+          <h2 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+            Explore {SITE.TITLE}
+          </h2>
+          <ExplorePanel />
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <h2 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+            Frequently Asked Questions
+          </h2>
+          <div class="min-h-64 rounded-2xl border border-border/50 bg-card/40 p-4 sm:min-h-72 sm:p-5">
+            <FaqAccordion siteTitle={SITE.TITLE} client:load />
+          </div>
+        </div>
+      </div>
+    </Container>
+  </div>
+
+  <Footer />
+</Layout>

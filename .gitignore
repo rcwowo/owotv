@@ -33,3 +33,5 @@ bun.lockb
 
 teaser.pptx
 ~$teaser.pptx
+# wrangler local state
+.wrangler/

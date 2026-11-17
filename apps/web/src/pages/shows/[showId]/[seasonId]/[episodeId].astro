@@ -1,0 +1,71 @@
+---
+import { buttonVariants } from '@/components/ui/button'
+import { EpisodePlaylist } from '@/components/shows/EpisodePlaylist'
+import MinimalLayout from '@/layouts/MinimalLayout.astro'
+import { getYouTubeVideoID } from '@/lib/utils'
+import { getShow } from '@/lib/shows'
+import { Icon } from 'astro-icon/components'
+
+const show = await getShow(Astro.params.showId ?? '')
+const season = show?.seasons.find((s) => s.id === Astro.params.seasonId)
+const episode = season?.episodes.find((e) => e.id === Astro.params.episodeId)
+if (!show || !season || !episode) return new Response(null, { status: 404 })
+const youtubeId = getYouTubeVideoID(episode.videoUrl)
+---
+
+<MinimalLayout
+  title={`${episode.title} - ${show.title}`}
+  description={`Watch ${show.title}: ${episode.title}`}
+  image={episode.thumbnailUrl}
+>
+  <main class="flex h-screen flex-col bg-background">
+    <!-- Top Navigation Bar -->
+    <div class="flex items-center justify-between border-b bg-background p-4">
+      <a
+        href={`/shows/${show.id}`}
+        class={buttonVariants({ variant: 'outline', size: 'sm' })}
+      >
+        <Icon name="lucide:chevron-left" class="md:mr-2 size-4" />
+        <span class="hidden md:inline">Back to {show.title}</span>
+      </a>
+      <div class="flex items-center gap-4 text-right">
+        <div>
+          <h1 class="truncate text-sm font-semibold">{episode.title}</h1>
+          <p class="truncate text-xs text-muted-foreground">
+            {show.title} • {season.title}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Main Player Area -->
+      <div class="flex flex-1 flex-col bg-black relative">
+        <div class="flex-1 flex items-center justify-center">
+          {youtubeId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&modestbranding=1&rel=0`}
+              title={episode.title}
+              class="h-full w-full max-h-screen aspect-video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          ) : (
+            <div class="flex h-full items-center justify-center text-muted-foreground">
+              <p>Invalid Video URL</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <!-- Playlist Sidebar  -->
+      <EpisodePlaylist
+        client:load
+        show={show}
+        currentSeasonId={season.id}
+        currentEpisodeId={episode.id}
+      />
+    </div>
+  </main>
+</MinimalLayout>

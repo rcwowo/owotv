@@ -1,0 +1,50 @@
+---
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import type { ChannelLink, ChannelPlatform } from '@owotv/shared'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  links: ChannelLink[]
+  class?: string
+}
+
+const { links, class: className } = Astro.props
+
+const platforms: Record<ChannelPlatform, { label: string; icon: string }> = {
+  twitch: { label: 'Twitch', icon: 'mingcute:twitch-line' },
+  youtube: { label: 'YouTube', icon: 'mingcute:youtube-line' },
+  x: { label: 'X', icon: 'mingcute:social-x-line' },
+  bluesky: { label: 'Bluesky', icon: 'mingcute:bluesky-social-line' },
+  instagram: { label: 'Instagram', icon: 'mingcute:instagram-line' },
+  tiktok: { label: 'TikTok', icon: 'mingcute:tiktok-line' },
+  threads: { label: 'Threads', icon: 'mingcute:threads-line' },
+  discord: { label: 'Discord', icon: 'mingcute:discord-line' },
+  website: { label: 'Website', icon: 'lucide:globe' },
+}
+---
+
+{links.length > 0 && (
+  <ul class={cn('flex flex-wrap gap-2', className)} role="list">
+    {links.map((link) => {
+      const { label, icon } = platforms[link.platform]
+      return (
+        <li>
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer me"
+            aria-label={label}
+            title={label}
+            class={cn(
+              buttonVariants({ variant: 'outline', size: 'icon' }),
+              'rounded-full border-white/10 bg-background/40 backdrop-blur-sm',
+            )}
+          >
+            <Icon name={icon} class="size-4" />
+          </a>
+        </li>
+      )
+    })}
+  </ul>
+)}
