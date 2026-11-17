@@ -31,7 +31,7 @@
     "db:migrate:local": "bun --filter @owotv/web db:migrate:local",
     "db:migrate:remote": "bun --filter @owotv/web db:migrate:remote",
     "test": "bun --filter \"./packages/*\" test",
-    "typecheck": "bun --filter \"./packages/*\" --filter \"./apps/cli\" typecheck",
+    "typecheck": "bun --filter \"./packages/*\" --filter \"./apps/*\" typecheck",
     "owotv": "node apps/cli/bin/owotv.js"
   },
   "devDependencies": {

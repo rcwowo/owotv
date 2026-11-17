@@ -9,6 +9,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "typecheck": "astro check",
     "db:migrate:local": "wrangler d1 migrations apply owotv --local",
     "db:migrate:remote": "wrangler d1 migrations apply owotv --remote",
     "cf-typegen": "wrangler types",
